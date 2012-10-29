@@ -31,6 +31,10 @@
   "devDependencies": {
     "grunt": "~0.3.17"
   },
+  "dependencies": {
+    "request": "2.11.4",
+    "underscore": "1.4.2"
+  },
   "keywords": [
     "gruntplugin"
   ]
