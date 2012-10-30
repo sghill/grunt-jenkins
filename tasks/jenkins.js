@@ -18,6 +18,9 @@ module.exports = function(grunt) {
   // TASKS
   // ==========================================================================
 
+  var SERVER = 'http://192.168.241.137';
+  var PIPELINE_DIRECTORY = 'pipeline';
+
   function logJobName(job) {
     grunt.log.writeln(job.name);
   }
@@ -29,7 +32,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-backup-configs', 'backup listed projects on jenkins server', function() {
     var done = this.async();
-    request('http://192.168.241.137/api/json', function(e, r, body) {
+    request(SERVER + '/api/json', function(e, r, body) {
       var isSuccess = !e && r.statusCode === 200;
       if(isSuccess) {
         var jobs = JSON.parse(body).jobs;
@@ -38,16 +41,15 @@ module.exports = function(grunt) {
           var jobConfigurationUrl = [job.url, 'config.xml'].join('/');
 
           request(jobConfigurationUrl, function(e, r, body) {
-            var pipelineDirectory = 'pipeline';
-            var directoryName = [pipelineDirectory, job.name].join('/');
-            var filename = [pipelineDirectory, job.name, 'config.xml'].join('/');
+            var directoryName = [PIPELINE_DIRECTORY, job.name].join('/');
+            var filename = [PIPELINE_DIRECTORY, job.name, 'config.xml'].join('/');
 
-            if(!fs.existsSync(pipelineDirectory)) {
-              fs.mkdirSync(pipelineDirectory); 
+            if(!fs.existsSync(PIPELINE_DIRECTORY)) {
+              fs.mkdirSync(PIPELINE_DIRECTORY);
             }
 
-            if(!fs.existsSync(directoryName)) { 
-              fs.mkdirSync(directoryName); 
+            if(!fs.existsSync(directoryName)) {
+              fs.mkdirSync(directoryName);
             }
 
             fs.writeFile(filename, body, 'utf8', function(err) {
@@ -66,13 +68,56 @@ module.exports = function(grunt) {
     });
   });
 
+  grunt.registerTask('jenkins-install-configs', 'install backed up configurations to jenkins', function() {
+    var done = this.async();
+    fs.readdir(PIPELINE_DIRECTORY, function(err, files) {
+      var statusCodes = [];
+      
+      _.each(files, function(folder) {
+        var filename = [PIPELINE_DIRECTORY, folder, 'config.xml'].join('/');
+        var url = [SERVER, 'job', folder, 'config.xml'].join('/');
+
+        request(url, function(e, r, body) {
+          if(r.statusCode === 200) {
+            grunt.log.writeln('job ' + folder + ' exists. Will be updating at ' + url);
+            fs.readFile(filename, function (err, data) {
+              if (err) throw err;
+              request({url: url, method: 'POST', body: data}, function(e, res, body) {
+                statusCodes.push(res.statusCode);
+                if(_.isEqual(folder, _.last(files))) {
+                  done(_.all(statusCodes, function(code) { return code === 200; }));
+                }
+              });
+            });
+          } else if(r.statusCode === 404) {
+            grunt.log.writeln('job ' + folder + ' does not exist. creating it.');
+            fs.readFile(filename, function (err, data) {
+              if (err) throw err;
+              var srvr =(SERVER + '/createItem');
+              grunt.log.writeln(srvr);
+              request({url: srvr, method: 'POST', qs: { name: folder }, headers: { "Content-Type": "text/xml"}, body: data}, function(e, res, body) {
+                statusCodes.push(res.statusCode);
+                grunt.log.writeln(JSON.stringify(res));
+                if(_.isEqual(folder, _.last(files))) {
+                  done(_.all(statusCodes, function(code) { return code === 200; }));
+                }
+              });
+            });
+          } else {
+            grunt.log.error('server error? no response from ' + SERVER);
+          }
+        });
+      });
+    });
+  });
+
 
   // ==========================================================================
   // HELPERS
   // ==========================================================================
 
   grunt.registerHelper('getProjectNames', function(callback, done) {
-    request('http://192.168.241.137/api/json', function(e, r, body) {
+    request(SERVER + '/api/json', function(e, r, body) {
       var isSuccess = !e & r.statusCode === 200;
       if(isSuccess) {
         var jobs = JSON.parse(body).jobs;
