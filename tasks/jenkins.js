@@ -84,12 +84,10 @@ module.exports = function(grunt) {
   function fetchDirectoriesOf(directory) {
     var deferred = q.defer();
     fs.readdir(directory, function(e, contents) {
-      if(e) {
-        return deferred.reject(e);
-      }
+      if(e) { deferred.reject(e); }
       // assumption: we don't have periods in our job names
       var directories = _.reject(contents, withDot);
-      return deferred.resolve(directories);
+      deferred.resolve(directories);
     });
     return deferred.promise;
   }
@@ -108,10 +106,8 @@ module.exports = function(grunt) {
   function fetchFileContents (fileAndJob) {
     var deferred = q.defer();
     fs.readFile(fileAndJob.fileName, function(e, contents) {
-      if(e) {
-        return deferred.reject(e);
-      }
-      return deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
+      if(e) { deferred.reject(e); }
+      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
     })
     return deferred.promise;
   }
@@ -130,8 +126,8 @@ module.exports = function(grunt) {
       body: config.fileContents
     };
     request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      return deferred.resolve(r.statusCode === 200);
+      if(e) { deferred.reject(e); }
+      deferred.resolve(r.statusCode === 200);
     })
     return deferred.promise;
   }
@@ -144,8 +140,8 @@ module.exports = function(grunt) {
       body: config.fileContents
     }
     request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      return deferred.resolve(r.statusCode === 200);
+      if(e) { deferred.reject(e); }
+      deferred.resolve(r.statusCode === 200);
     });
     
     return deferred.promise;
@@ -159,13 +155,13 @@ module.exports = function(grunt) {
       return fetchFileContents(fileStrategy).
         then(createJob).
         then(function(val) {
-          return deferred.resolve(val);
+          deferred.resolve(val);
         });
     } else if (strategyObj.strategy === 'update') {
       return fetchFileContents(fileStrategy).
         then(updateJob).
         then(function(val) {
-          return deferred.resolve(val);
+          deferred.resolve(val);
         });
     }
     return deferred.promise;
@@ -179,7 +175,7 @@ module.exports = function(grunt) {
       return fetchJobConfigurationStrategy(folder).
         then(applyStrategy).
         then(function(val) {
-          return deferred.resolve(val);
+          deferred.resolve(val);
         });
     });
     
@@ -195,54 +191,6 @@ module.exports = function(grunt) {
       }, logError).
       end();
   });
-
-  grunt.registerTask('jenkins-install-configs', 'install backed up configurations to jenkins', function() {
-    var done = this.async();
-    fs.readdir(PIPELINE_DIRECTORY, function(err, files) {
-      var statusCodes = [];
-      _.each(files, function(folder) {
-        var filename = [PIPELINE_DIRECTORY, folder, 'config.xml'].join('/');
-        var url = [SERVER, 'job', folder, 'config.xml'].join('/');
-        
-        fs.stat([PIPELINE_DIRECTORY, folder].join('/'), function(e, stats) {
-          if(e) { throw e; }
-          if(stats.isDirectory()) {
-            request(url, function(e, r, body) {
-              if(r.statusCode === 200) {
-                grunt.log.writeln('job ' + folder + ' exists. Will be updating at ' + url);
-                fs.readFile(filename, function (err, data) {
-                  if (err) throw err;
-                  request({url: url, method: 'POST', body: data}, function(e, res, body) {
-                    statusCodes.push(res.statusCode);
-                    if(isLast(folder, files)) {
-                      done(_.all(statusCodes, function(code) { return code === 200; }));
-                    }
-                  });
-                });
-              } else if(r.statusCode === 404) {
-                grunt.log.writeln('job ' + folder + ' does not exist. creating it.');
-                fs.readFile(filename, function (err, data) {
-                  if (err) throw err;
-                  var srvr =(SERVER + '/createItem');
-                  request({url: srvr, method: 'POST', qs: { name: folder }, headers: { "Content-Type": "text/xml" }, body: data}, function(e, res, body) {
-                    statusCodes.push(res.statusCode);
-                    if(isLast(folder, files)) {
-                      done(_.all(statusCodes, function(code) { return code === 200; }));
-                    }
-                  });
-                });
-              } else {
-                grunt.log.error('server error? no response from ' + SERVER);
-              }
-            });
-          } else {
-            return;
-          }
-        });
-      });
-    });
-  });
-
 
   // ==========================================================================
   // HELPERS
