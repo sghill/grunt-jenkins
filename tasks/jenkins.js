@@ -198,6 +198,55 @@ module.exports = function(grunt) {
       end();
   });
 
+  function fetchPluginsFrom(directory) {
+    var deferred = q.defer();
+    fs.readFile([directory, 'plugins.json'].join('/'), function(e, contents) {
+      if(e) { deferred.reject(e); }
+      deferred.resolve(contents);
+    });
+    return deferred.promise;
+  }
+
+  grunt.registerTask('jenkins-install-plugins', 'good mode plugins', function() {
+    var done = this.async();
+    fetchPluginsFrom(PIPELINE_DIRECTORY).
+      then(function() { done(true); });
+  });
+
+  function fetchEnabledPluginsOf(server) {
+    var url = [SERVER, 'pluginManager', 'api', 'json?depth=1'].join('/');
+    var deferred = q.defer();
+
+    request(url, function(e, r, body) {
+      var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
+      var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
+
+      deferred.resolve(plugins);
+    });
+
+    return deferred.promise;
+  }
+
+  function writeFileToPipelineDirectory(plugins) {
+    var deferred = q.defer();
+    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
+    var body = JSON.stringify(plugins, null, 2);
+    fs.writeFile(filename, body, 'utf8', function(e) {
+      if(e) { deferred.reject(e); }
+
+      grunt.log.writeln('created file: ' + filename);
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  }
+
+  grunt.registerTask('jenkins-backup-plugins', 'backup the enabled plugins', function() {
+    var done = this.async();
+    fetchEnabledPluginsOf(SERVER).
+      then(writeFileToPipelineDirectory).
+      then(function(x) { done(true); });
+  });
   // ==========================================================================
   // HELPERS
   // ==========================================================================
