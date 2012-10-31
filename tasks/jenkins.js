@@ -84,12 +84,10 @@ module.exports = function(grunt) {
   function fetchDirectoriesOf(directory) {
     var deferred = q.defer();
     fs.readdir(directory, function(e, contents) {
-      if(e) {
-        return deferred.reject(e);
-      }
+      if(e) { deferred.reject(e); }
       // assumption: we don't have periods in our job names
       var directories = _.reject(contents, withDot);
-      return deferred.resolve(directories);
+      deferred.resolve(directories);
     });
     return deferred.promise;
   }
@@ -108,10 +106,8 @@ module.exports = function(grunt) {
   function fetchFileContents (fileAndJob) {
     var deferred = q.defer();
     fs.readFile(fileAndJob.fileName, function(e, contents) {
-      if(e) {
-        return deferred.reject(e);
-      }
-      return deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
+      if(e) { deferred.reject(e); }
+      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
     })
     return deferred.promise;
   }
@@ -129,60 +125,66 @@ module.exports = function(grunt) {
       },
       body: config.fileContents
     };
+
     request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      return deferred.resolve(r.statusCode === 200);
+      if(e) { deferred.reject(e); }
+      deferred.resolve(r.statusCode === 200);
     })
+
     return deferred.promise;
   }
   
   function updateJob (config) {
-    var deferred = q.defer();
-    var options = {
+    var deferred = q.defer(),
+        options = {
       url: [SERVER, 'job', config.jobName, 'config.xml'].join('/'),
       method: 'POST',
       body: config.fileContents
-    }
+    };
+
     request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      return deferred.resolve(r.statusCode === 200);
+      if(e) { deferred.reject(e); }
+      deferred.resolve(r.statusCode === 200);
     });
-    
+
     return deferred.promise;
   }
-  
+
   function applyStrategy (strategyObj) {
-    var deferred = q.defer();
-    var filename = [PIPELINE_DIRECTORY, strategyObj.jobName, 'config.xml'].join('/');
-    var fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
-    if(strategyObj.strategy === 'create') {
-      return fetchFileContents(fileStrategy).
-        then(createJob).
-        then(function(val) {
-          return deferred.resolve(val);
-        });
-    } else if (strategyObj.strategy === 'update') {
-      return fetchFileContents(fileStrategy).
-        then(updateJob).
-        then(function(val) {
-          return deferred.resolve(val);
-        });
+    var deferred = q.defer(),
+        filename = [PIPELINE_DIRECTORY, strategyObj.jobName, 'config.xml'].join('/'),
+        fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
+
+    function resolve (val) {
+      deferred.resolve(val);
     }
+
+    if(strategyObj.strategy === 'create') {
+      fetchFileContents(fileStrategy).
+        then(createJob).
+        then(resolve);
+    } else if (strategyObj.strategy === 'update') {
+      fetchFileContents(fileStrategy).
+        then(updateJob).
+        then(resolve);
+    }
+
     return deferred.promise;
   }
-  
+
   function createOrUpdateJobs(directories) {
     var deferred = q.defer();
-    
+
+    function resolve (val) {
+      deferred.resolve(val);
+    }
+
     _.each(directories, function(folder) {
-      var url = [SERVER, 'job', folder, 'config.xml'].join('/');
-      return fetchJobConfigurationStrategy(folder).
+      fetchJobConfigurationStrategy(folder).
         then(applyStrategy).
-        then(function(val) {
-          return deferred.resolve(val);
-        });
+        then(resolve);
     });
-    
+
     return deferred.promise;
   }
   
@@ -195,54 +197,6 @@ module.exports = function(grunt) {
       }, logError).
       end();
   });
-
-  grunt.registerTask('jenkins-install-configs', 'install backed up configurations to jenkins', function() {
-    var done = this.async();
-    fs.readdir(PIPELINE_DIRECTORY, function(err, files) {
-      var statusCodes = [];
-      _.each(files, function(folder) {
-        var filename = [PIPELINE_DIRECTORY, folder, 'config.xml'].join('/');
-        var url = [SERVER, 'job', folder, 'config.xml'].join('/');
-        
-        fs.stat([PIPELINE_DIRECTORY, folder].join('/'), function(e, stats) {
-          if(e) { throw e; }
-          if(stats.isDirectory()) {
-            request(url, function(e, r, body) {
-              if(r.statusCode === 200) {
-                grunt.log.writeln('job ' + folder + ' exists. Will be updating at ' + url);
-                fs.readFile(filename, function (err, data) {
-                  if (err) throw err;
-                  request({url: url, method: 'POST', body: data}, function(e, res, body) {
-                    statusCodes.push(res.statusCode);
-                    if(isLast(folder, files)) {
-                      done(_.all(statusCodes, function(code) { return code === 200; }));
-                    }
-                  });
-                });
-              } else if(r.statusCode === 404) {
-                grunt.log.writeln('job ' + folder + ' does not exist. creating it.');
-                fs.readFile(filename, function (err, data) {
-                  if (err) throw err;
-                  var srvr =(SERVER + '/createItem');
-                  request({url: srvr, method: 'POST', qs: { name: folder }, headers: { "Content-Type": "text/xml" }, body: data}, function(e, res, body) {
-                    statusCodes.push(res.statusCode);
-                    if(isLast(folder, files)) {
-                      done(_.all(statusCodes, function(code) { return code === 200; }));
-                    }
-                  });
-                });
-              } else {
-                grunt.log.error('server error? no response from ' + SERVER);
-              }
-            });
-          } else {
-            return;
-          }
-        });
-      });
-    });
-  });
-
 
   // ==========================================================================
   // HELPERS
