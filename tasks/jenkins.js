@@ -1,6 +1,7 @@
 var request = require('request');
 var fs = require('fs');
 var _ = require('underscore');
+var Q = require('q');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
@@ -72,39 +73,43 @@ module.exports = function(grunt) {
     var done = this.async();
     fs.readdir(PIPELINE_DIRECTORY, function(err, files) {
       var statusCodes = [];
-      
       _.each(files, function(folder) {
         var filename = [PIPELINE_DIRECTORY, folder, 'config.xml'].join('/');
         var url = [SERVER, 'job', folder, 'config.xml'].join('/');
-
-        request(url, function(e, r, body) {
-          if(r.statusCode === 200) {
-            grunt.log.writeln('job ' + folder + ' exists. Will be updating at ' + url);
-            fs.readFile(filename, function (err, data) {
-              if (err) throw err;
-              request({url: url, method: 'POST', body: data}, function(e, res, body) {
-                statusCodes.push(res.statusCode);
-                if(_.isEqual(folder, _.last(files))) {
-                  done(_.all(statusCodes, function(code) { return code === 200; }));
-                }
-              });
-            });
-          } else if(r.statusCode === 404) {
-            grunt.log.writeln('job ' + folder + ' does not exist. creating it.');
-            fs.readFile(filename, function (err, data) {
-              if (err) throw err;
-              var srvr =(SERVER + '/createItem');
-              grunt.log.writeln(srvr);
-              request({url: srvr, method: 'POST', qs: { name: folder }, headers: { "Content-Type": "text/xml"}, body: data}, function(e, res, body) {
-                statusCodes.push(res.statusCode);
-                grunt.log.writeln(JSON.stringify(res));
-                if(_.isEqual(folder, _.last(files))) {
-                  done(_.all(statusCodes, function(code) { return code === 200; }));
-                }
-              });
+        
+        fs.stat([PIPELINE_DIRECTORY, folder].join('/'), function(e, stats) {
+          if(e) { throw e; }
+          if(stats.isDirectory()) {
+            request(url, function(e, r, body) {
+              if(r.statusCode === 200) {
+                grunt.log.writeln('job ' + folder + ' exists. Will be updating at ' + url);
+                fs.readFile(filename, function (err, data) {
+                  if (err) throw err;
+                  request({url: url, method: 'POST', body: data}, function(e, res, body) {
+                    statusCodes.push(res.statusCode);
+                    if(_.isEqual(folder, _.last(files))) {
+                      done(_.all(statusCodes, function(code) { return code === 200; }));
+                    }
+                  });
+                });
+              } else if(r.statusCode === 404) {
+                grunt.log.writeln('job ' + folder + ' does not exist. creating it.');
+                fs.readFile(filename, function (err, data) {
+                  if (err) throw err;
+                  var srvr =(SERVER + '/createItem');
+                  request({url: srvr, method: 'POST', qs: { name: folder }, headers: { "Content-Type": "text/xml" }, body: data}, function(e, res, body) {
+                    statusCodes.push(res.statusCode);
+                    if(_.isEqual(folder, _.last(files))) {
+                      done(_.all(statusCodes, function(code) { return code === 200; }));
+                    }
+                  });
+                });
+              } else {
+                grunt.log.error('server error? no response from ' + SERVER);
+              }
             });
           } else {
-            grunt.log.error('server error? no response from ' + SERVER);
+            return;
           }
         });
       });
