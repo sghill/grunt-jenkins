@@ -180,9 +180,20 @@ module.exports = function(grunt) {
 
     return deferred.promise;
   }
-
+  
+  function ensureDirectoriesExist(directories) {
+    _.each(directories, function(d, index) {
+      var path = _.take(directories, (index + 1)).join('/')
+      grunt.log.writeln(path);
+      if(!fs.existsSync(path)) {
+        fs.mkdirSync(path);
+      }
+    });
+  }
+  
   function writeFileToPipelineDirectory(plugins) {
     var deferred = q.defer();
+    ensureDirectoriesExist([PIPELINE_DIRECTORY]);
     var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
     var body = JSON.stringify(plugins, null, 2);
     fs.writeFile(filename, body, 'utf8', function(e) {
@@ -234,16 +245,8 @@ module.exports = function(grunt) {
   function writeToJobDirectories(jobs) {
     var deferred = q.defer();
     _.each(jobs, function(j) {
-      var directoryName = [PIPELINE_DIRECTORY, j.name].join('/');
-      var filename = [directoryName, 'config.xml'].join('/');
-
-      if(!fs.existsSync(PIPELINE_DIRECTORY)) {
-        fs.mkdirSync(PIPELINE_DIRECTORY);
-      }
-
-      if(!fs.existsSync(directoryName)) {
-        fs.mkdirSync(directoryName);
-      }
+      ensureDirectoriesExist([PIPELINE_DIRECTORY, j.name]);
+      var filename = [PIPELINE_DIRECTORY, j.name, 'config.xml'].join('/');
 
       fs.writeFile(filename, j.config, 'utf8', function(e) {
         if(e) { deferred.reject(e); }
@@ -259,14 +262,14 @@ module.exports = function(grunt) {
   // TASKS
   // ==========================================================================
 
-  grunt.registerTask('jenkins-install-jobs', 'install all jobs', function() {
+  grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
     loadJobsFromDisk().
       then(createOrUpdateJobs).
       then(function() { done(true); }, logError);
   });
 
-  grunt.registerTask('jenkins-install-plugins', 'install all plugins', function() {
+  grunt.registerTask('jenkins-install-plugins', 'install all Jenkins plugins', function() {
     var done = this.async();
     loadPluginsFromDisk().
       then(transformToJenkinsXml).
@@ -274,7 +277,7 @@ module.exports = function(grunt) {
       then(function() { done(true); }, logError);
   });
   
-  grunt.registerTask('jenkins-backup-projects', 'backup all projects', function() {
+  grunt.registerTask('jenkins-backup-jobs', 'backup all Jenkins jobs', function() {
     var done = this.async();
     fetchJobsFromServer().
       then(fetchJobConfigurations).
@@ -282,7 +285,7 @@ module.exports = function(grunt) {
       then(function() { done(true); }, logError);
   });
   
-  grunt.registerTask('jenkins-backup-plugins', 'backup all enabled plugins', function() {
+  grunt.registerTask('jenkins-backup-plugins', 'backup all enabled Jenkins plugins', function() {
     var done = this.async();
     fetchEnabledPluginsFromServer().
       then(writeFileToPipelineDirectory).
