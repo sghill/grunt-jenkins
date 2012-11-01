@@ -51,7 +51,7 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
   
-  function fetchFileContents (fileAndJob) {
+  function fetchFileContents(fileAndJob) {
     var deferred = q.defer();
     fs.readFile(fileAndJob.fileName, function(e, contents) {
       if(e) { return deferred.reject(e); }
@@ -261,6 +261,23 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
   
+  function compareNumberOfJobs(onDiskJobs) {
+    return fetchJobsFromServer().
+      then(function(serverJobs) {
+        if(onDiskJobs.length !== serverJobs.length) {
+          grunt.log.error('mismatch between jobs stored locally (' + 
+            onDiskJobs.length + ') and jobs on server (' + serverJobs.length + ')');
+        }
+      })
+  }
+  
+  function compareToJobsOnDisk(jobs) {
+    var deferred = q.defer();
+    loadJobsFromDisk().
+      then(compareNumberOfJobs)
+    return deferred.promise;
+  }
+  
   // ==========================================================================
   // TASKS
   // ==========================================================================
@@ -319,5 +336,13 @@ module.exports = function(grunt) {
         });
       }).
       then(function() { done(true); }, logError);
+  });
+  
+  grunt.registerTask('jenkins-verify-jobs', 'verify job configurations in Jenkins match the on-disk versions', function() {
+    var done = this.async();
+      fetchJobsFromServer().
+      then(fetchJobConfigurations).
+      then(compareToJobsOnDisk).
+      then(function() { done(true); });
   });
 };
