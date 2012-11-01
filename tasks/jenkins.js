@@ -267,6 +267,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-install', 'jenkins-install-jobs jenkins-install-plugins');
   grunt.registerTask('jenkins-backup', 'jenkins-backup-jobs jenkins-backup-plugins');
+  grunt.registerTask('jenkins-list', 'jenkins-list-jobs jenkins-list-plugins');
 
   grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
@@ -282,7 +283,7 @@ module.exports = function(grunt) {
       then(installPlugins).
       then(function() { done(true); }, logError);
   });
-  
+
   grunt.registerTask('jenkins-backup-jobs', 'backup all Jenkins jobs', function() {
     var done = this.async();
     fetchJobsFromServer().
@@ -290,7 +291,7 @@ module.exports = function(grunt) {
       then(writeToJobDirectories).
       then(function() { done(true); }, logError);
   });
-  
+
   grunt.registerTask('jenkins-backup-plugins', 'backup all enabled Jenkins plugins', function() {
     var done = this.async();
     fetchEnabledPluginsFromServer().
@@ -298,4 +299,25 @@ module.exports = function(grunt) {
       then(function() { done(true); }, logError);
   });
 
+  grunt.registerTask('jenkins-list-jobs', 'list all found Jenkins jobs', function() {
+    var done = this.async();
+    fetchJobsFromServer().
+      then(function(jobs) {
+        _.each(jobs, function(j) {
+          grunt.log.writeln('job: ' + j.name + ' @ ' + j.url);
+        });
+      }).
+      then(function() { done(true); }, logError);
+  });
+
+  grunt.registerTask('jenkins-list-plugins', 'list all enabled Jenkins plugins', function() {
+    var done = this.async();
+    fetchEnabledPluginsFromServer().
+      then(function(plugins) {
+        _.each(plugins, function(p) {
+          grunt.log.writeln('plugin id: ' + p.id + ', version: ' + p.version);
+        });
+      }).
+      then(function() { done(true); }, logError);
+  });
 };
