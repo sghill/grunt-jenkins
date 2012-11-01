@@ -29,6 +29,9 @@ module.exports = function(grunt) {
         strict: false
       },
       globals: {}
+    },
+    jenkins: {
+      serverAddress: 'http://192.168.241.137/'
     }
   });
 

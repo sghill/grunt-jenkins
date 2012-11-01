@@ -11,9 +11,11 @@ var q = require('q');
  */
 
 module.exports = function(grunt) {
+  
+  grunt.config.requires('jenkins.serverAddress');
 
-  var SERVER = 'http://192.168.241.137';
-  var PIPELINE_DIRECTORY = 'pipeline';
+  var SERVER = grunt.config('jenkins.serverAddress');
+  var PIPELINE_DIRECTORY = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
 
   function logError(e) {
     grunt.log.error(e);
@@ -30,7 +32,7 @@ module.exports = function(grunt) {
   function loadJobsFromDisk() {
     var deferred = q.defer();
     fs.readdir(PIPELINE_DIRECTORY, function(e, contents) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       // assumption: we don't have periods in our job names
       var directories = _.reject(contents, withDot);
       deferred.resolve(directories);
@@ -52,7 +54,7 @@ module.exports = function(grunt) {
   function fetchFileContents (fileAndJob) {
     var deferred = q.defer();
     fs.readFile(fileAndJob.fileName, function(e, contents) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
     });
     return deferred.promise;
@@ -73,7 +75,7 @@ module.exports = function(grunt) {
     };
 
     request(options, function(e, r, b) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
 
@@ -89,7 +91,7 @@ module.exports = function(grunt) {
     };
 
     request(options, function(e, r, b) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
 
@@ -133,12 +135,12 @@ module.exports = function(grunt) {
 
     return deferred.promise;
   }
-  
 
   function loadPluginsFromDisk() {
     var deferred = q.defer();
-    fs.readFile([PIPELINE_DIRECTORY, 'plugins.json'].join('/'), function(e, contents) {
-      if(e) { deferred.reject(e); }
+    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
+    fs.readFile(filename, function(e, contents) {
+      if(e || _.isUndefined(contents)) { return deferred.reject(e); }
       deferred.resolve(JSON.parse(contents));
     });
     return deferred.promise;
@@ -160,7 +162,7 @@ module.exports = function(grunt) {
         };
 
     request(options, function(e, r, b) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
      
@@ -184,7 +186,6 @@ module.exports = function(grunt) {
   function ensureDirectoriesExist(directories) {
     _.each(directories, function(d, index) {
       var path = _.take(directories, (index + 1)).join('/');
-      grunt.log.writeln(path);
       if(!fs.existsSync(path)) {
         fs.mkdirSync(path);
       }
@@ -197,9 +198,9 @@ module.exports = function(grunt) {
     var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
     var body = JSON.stringify(plugins, null, 2);
     fs.writeFile(filename, body, 'utf8', function(e) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
 
-      grunt.log.writeln('created file: ' + filename);
+      grunt.log.ok('created file: ' + filename);
       deferred.resolve();
     });
 
@@ -211,7 +212,7 @@ module.exports = function(grunt) {
     var url = [SERVER, 'api', 'json'].join('/');
     
     request(url, function(e, r, body) {
-      if(e) { deferred.reject(e); }
+      if(e) { return deferred.reject(e); }
       var jobs = JSON.parse(body).jobs;
       deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
@@ -233,7 +234,7 @@ module.exports = function(grunt) {
         if(isLast(j, jobs)) {
           if(_.any(errors, function(e) { return e; }) || 
              _.any(responseCodes, function(c) { return c !== 200; })) {
-            deferred.reject();
+            return deferred.reject();
           }
           deferred.resolve(jobConfigurations);
         }
@@ -249,7 +250,9 @@ module.exports = function(grunt) {
       var filename = [PIPELINE_DIRECTORY, j.name, 'config.xml'].join('/');
 
       fs.writeFile(filename, j.config, 'utf8', function(e) {
-        if(e) { deferred.reject(e); }
+        if(e) { return deferred.reject(e); }
+
+        grunt.log.ok('created file: ' + filename);
         if(isLast(j, jobs)) {
           deferred.resolve(jobs);
         }
@@ -261,6 +264,9 @@ module.exports = function(grunt) {
   // ==========================================================================
   // TASKS
   // ==========================================================================
+
+  grunt.registerTask('jenkins-install', 'jenkins-install-jobs jenkins-install-plugins');
+  grunt.registerTask('jenkins-backup', 'jenkins-backup-jobs jenkins-backup-plugins');
 
   grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
