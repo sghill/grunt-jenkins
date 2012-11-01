@@ -12,13 +12,6 @@ var q = require('q');
 
 module.exports = function(grunt) {
 
-  // Please see the grunt documentation for more information regarding task and
-  // helper creation: https://github.com/gruntjs/grunt/blob/master/docs/toc.md
-
-  // ==========================================================================
-  // TASKS
-  // ==========================================================================
-
   var SERVER = 'http://192.168.241.137';
   var PIPELINE_DIRECTORY = 'pipeline';
 
@@ -33,49 +26,6 @@ module.exports = function(grunt) {
   function isLast(item, collection) {
     return _.isEqual(item, _.last(collection));
   }
-
-  grunt.registerTask('jenkins-list-projects', 'list projects on jenkins server', function() {
-    var done = this.async();
-    grunt.helper('getProjectNames', logJobName, done);
- });
-
-  grunt.registerTask('jenkins-backup-configs', 'backup listed projects on jenkins server', function() {
-    var done = this.async();
-    request(SERVER + '/api/json', function(e, r, body) {
-      var isSuccess = !e && r.statusCode === 200;
-      if(isSuccess) {
-        var jobs = JSON.parse(body).jobs;
-
-        _.each(jobs, function(job) {
-          var jobConfigurationUrl = [job.url, 'config.xml'].join('/');
-
-          request(jobConfigurationUrl, function(e, r, body) {
-            var directoryName = [PIPELINE_DIRECTORY, job.name].join('/');
-            var filename = [PIPELINE_DIRECTORY, job.name, 'config.xml'].join('/');
-
-            if(!fs.existsSync(PIPELINE_DIRECTORY)) {
-              fs.mkdirSync(PIPELINE_DIRECTORY);
-            }
-
-            if(!fs.existsSync(directoryName)) {
-              fs.mkdirSync(directoryName);
-            }
-
-            fs.writeFile(filename, body, 'utf8', function(err) {
-              if(err) { throw err; }
-
-              grunt.log.writeln('created file: ' + filename);
-              if(isLast(job, jobs)) {
-                done(isSuccess);
-              }
-            });
-
-          });
-        });
-
-      }
-    });
-  });
   
   function withDot(filename) {
     return /\./.test(filename);
@@ -188,30 +138,38 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
   
-  grunt.registerTask('jenkins-install-jobs', 'good mode', function() {
-    var done = this.async();
-    fetchDirectoriesOf(PIPELINE_DIRECTORY).
-      then(createOrUpdateJobs).
-      then(function() {
-        done(true);
-      }, logError).
-      end();
-  });
 
   function fetchPluginsFrom(directory) {
     var deferred = q.defer();
     fs.readFile([directory, 'plugins.json'].join('/'), function(e, contents) {
       if(e) { deferred.reject(e); }
-      deferred.resolve(contents);
+      deferred.resolve(JSON.parse(contents));
     });
     return deferred.promise;
   }
+  
+  function transformToJenkinsXml(plugins) {
+    var attributes = _.map(plugins, function(p) { 
+      return ['<install plugin="', p.id, '@', p.version, '" />'].join(''); 
+    }).join('\n');
+    return ['<jenkins>', attributes, '</jenkins>'].join('\n'); 
+  }
+  
+  function installPlugins(xml) {
+    var deferred = q.defer(),
+        options = {
+      url: [SERVER, 'pluginManager', 'installNecessaryPlugins'].join('/'),
+      method: 'POST',
+      body: xml
+    };
 
-  grunt.registerTask('jenkins-install-plugins', 'good mode plugins', function() {
-    var done = this.async();
-    fetchPluginsFrom(PIPELINE_DIRECTORY).
-      then(function() { done(true); });
-  });
+    request(options, function(e, r, b) {
+      if(e) { deferred.reject(e); }
+      deferred.resolve(r.statusCode === 200);
+    });
+     
+    return deferred.promise;
+  }
 
   function fetchEnabledPluginsOf(server) {
     var url = [SERVER, 'pluginManager', 'api', 'json?depth=1'].join('/');
@@ -241,12 +199,78 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
 
+  // ==========================================================================
+  // TASKS
+  // ==========================================================================
+
+  grunt.registerTask('jenkins-install-jobs', 'good mode', function() {
+    var done = this.async();
+    fetchDirectoriesOf(PIPELINE_DIRECTORY).
+      then(createOrUpdateJobs).
+      then(function() {
+        done(true);
+      }, logError).
+      end();
+  });
+
+  grunt.registerTask('jenkins-install-plugins', 'good mode plugins', function() {
+    var done = this.async();
+    fetchPluginsFrom(PIPELINE_DIRECTORY).
+      then(transformToJenkinsXml).
+      then(installPlugins).
+      then(function() { done(true); });
+  });
+  
+  grunt.registerTask('jenkins-backup-configs', 'backup listed projects on jenkins server', function() {
+    var done = this.async();
+    request(SERVER + '/api/json', function(e, r, body) {
+      var isSuccess = !e && r.statusCode === 200;
+      if(isSuccess) {
+        var jobs = JSON.parse(body).jobs;
+
+        _.each(jobs, function(job) {
+          var jobConfigurationUrl = [job.url, 'config.xml'].join('/');
+
+          request(jobConfigurationUrl, function(e, r, body) {
+            var directoryName = [PIPELINE_DIRECTORY, job.name].join('/');
+            var filename = [PIPELINE_DIRECTORY, job.name, 'config.xml'].join('/');
+
+            if(!fs.existsSync(PIPELINE_DIRECTORY)) {
+              fs.mkdirSync(PIPELINE_DIRECTORY);
+            }
+
+            if(!fs.existsSync(directoryName)) {
+              fs.mkdirSync(directoryName);
+            }
+
+            fs.writeFile(filename, body, 'utf8', function(err) {
+              if(err) { throw err; }
+
+              grunt.log.writeln('created file: ' + filename);
+              if(isLast(job, jobs)) {
+                done(isSuccess);
+              }
+            });
+
+          });
+        });
+
+      }
+    });
+  });
+  
   grunt.registerTask('jenkins-backup-plugins', 'backup the enabled plugins', function() {
     var done = this.async();
     fetchEnabledPluginsOf(SERVER).
       then(writeFileToPipelineDirectory).
       then(function(x) { done(true); });
   });
+  
+  grunt.registerTask('jenkins-list-projects', 'list projects on jenkins server', function() {
+    var done = this.async();
+    grunt.helper('getProjectNames', logJobName, done);
+ });
+  
   // ==========================================================================
   // HELPERS
   // ==========================================================================
