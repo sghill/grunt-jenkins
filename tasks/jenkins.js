@@ -24,7 +24,7 @@ module.exports = function(grunt) {
   }
   
   function withDot(filename) {
-    return /\./.test(filename);
+    return (/\./).test(filename);
   }
    
   function loadJobsFromDisk() {
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
     fs.readFile(fileAndJob.fileName, function(e, contents) {
       if(e) { deferred.reject(e); }
       deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
-    })
+    });
     return deferred.promise;
   }
   
@@ -75,7 +75,7 @@ module.exports = function(grunt) {
     request(options, function(e, r, b) {
       if(e) { deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
-    })
+    });
 
     return deferred.promise;
   }
@@ -183,7 +183,7 @@ module.exports = function(grunt) {
   
   function ensureDirectoriesExist(directories) {
     _.each(directories, function(d, index) {
-      var path = _.take(directories, (index + 1)).join('/')
+      var path = _.take(directories, (index + 1)).join('/');
       grunt.log.writeln(path);
       if(!fs.existsSync(path)) {
         fs.mkdirSync(path);
@@ -213,7 +213,7 @@ module.exports = function(grunt) {
     request(url, function(e, r, body) {
       if(e) { deferred.reject(e); }
       var jobs = JSON.parse(body).jobs;
-      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }}));
+      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
     
     return deferred.promise;
@@ -229,7 +229,7 @@ module.exports = function(grunt) {
         errors.push(e);
         responseCodes.push(r.statusCode);
         j.config = body;
-        jobConfigurations.push(j)
+        jobConfigurations.push(j);
         if(isLast(j, jobs)) {
           if(_.any(errors, function(e) { return e; }) || 
              _.any(responseCodes, function(c) { return c !== 200; })) {
