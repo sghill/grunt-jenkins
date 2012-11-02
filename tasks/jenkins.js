@@ -40,6 +40,32 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
   
+  function fetchFileContents(fileAndJob) {
+    var deferred = q.defer();
+    fs.readFile(fileAndJob.fileName, function(e, contents) {
+      if(e) { return deferred.reject(e); }
+      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
+    });
+    return deferred.promise;
+  }
+
+  function loadPluginsFromDisk() {
+    var deferred = q.defer();
+    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
+    fs.readFile(filename, function(e, contents) {
+      if(e || _.isUndefined(contents)) { return deferred.reject(e); }
+      deferred.resolve(JSON.parse(contents));
+    });
+    return deferred.promise;
+  }
+  
+  function transformToJenkinsXml(plugins) {
+    var attributes = _.map(plugins, function(p) { 
+      return ['<install plugin="', p.id, '@', p.version, '" />'].join(''); 
+    }).join('\n');
+    return ['<jenkins>', attributes, '</jenkins>'].join('\n'); 
+  }
+      
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer();
     var url = [SERVER, 'job', job, 'config.xml'].join('/');
@@ -50,16 +76,43 @@ module.exports = function(grunt) {
     });
     return deferred.promise;
   }
-  
-  function fetchFileContents(fileAndJob) {
+
+  function fetchJobsFromServer() {
     var deferred = q.defer();
-    fs.readFile(fileAndJob.fileName, function(e, contents) {
+    var url = [SERVER, 'api', 'json'].join('/');
+    
+    request(url, function(e, r, body) {
       if(e) { return deferred.reject(e); }
-      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
+      var jobs = JSON.parse(body).jobs;
+      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
+    
     return deferred.promise;
   }
   
+  function fetchJobConfigurations(jobs) {
+    var deferred = q.defer();
+    var jobConfigurations = [];
+    var errors = [];
+    var responseCodes = [];
+    _.each(jobs, function(j) {
+      request([j.url, 'config.xml'].join(''), function(e, r, body) {
+        errors.push(e);
+        responseCodes.push(r.statusCode);
+        j.config = body;
+        jobConfigurations.push(j);
+        if(isLast(j, jobs)) {
+          if(_.any(errors, function(e) { return e; }) || 
+             _.any(responseCodes, function(c) { return c !== 200; })) {
+            return deferred.reject();
+          }
+          deferred.resolve(jobConfigurations);
+        }
+      });
+    });
+    return deferred.promise;
+  }
+    
   function createJob (config) {
     var deferred = q.defer();
     var options = {
@@ -136,23 +189,6 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
 
-  function loadPluginsFromDisk() {
-    var deferred = q.defer();
-    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
-    fs.readFile(filename, function(e, contents) {
-      if(e || _.isUndefined(contents)) { return deferred.reject(e); }
-      deferred.resolve(JSON.parse(contents));
-    });
-    return deferred.promise;
-  }
-  
-  function transformToJenkinsXml(plugins) {
-    var attributes = _.map(plugins, function(p) { 
-      return ['<install plugin="', p.id, '@', p.version, '" />'].join(''); 
-    }).join('\n');
-    return ['<jenkins>', attributes, '</jenkins>'].join('\n'); 
-  }
-  
   function installPlugins(xml) {
     var deferred = q.defer(),
         options = {
@@ -206,43 +242,7 @@ module.exports = function(grunt) {
 
     return deferred.promise;
   }
-  
-  function fetchJobsFromServer() {
-    var deferred = q.defer();
-    var url = [SERVER, 'api', 'json'].join('/');
-    
-    request(url, function(e, r, body) {
-      if(e) { return deferred.reject(e); }
-      var jobs = JSON.parse(body).jobs;
-      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
-    });
-    
-    return deferred.promise;
-  }
-  
-  function fetchJobConfigurations(jobs) {
-    var deferred = q.defer();
-    var jobConfigurations = [];
-    var errors = [];
-    var responseCodes = [];
-    _.each(jobs, function(j) {
-      request([j.url, 'config.xml'].join(''), function(e, r, body) {
-        errors.push(e);
-        responseCodes.push(r.statusCode);
-        j.config = body;
-        jobConfigurations.push(j);
-        if(isLast(j, jobs)) {
-          if(_.any(errors, function(e) { return e; }) || 
-             _.any(responseCodes, function(c) { return c !== 200; })) {
-            return deferred.reject();
-          }
-          deferred.resolve(jobConfigurations);
-        }
-      });
-    });
-    return deferred.promise;
-  }
-  
+
   function writeToJobDirectories(jobs) {
     var deferred = q.defer();
     _.each(jobs, function(j) {
