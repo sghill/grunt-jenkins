@@ -278,6 +278,20 @@ module.exports = function(grunt) {
     return deferred.promise;
   }
   
+  function compareToPluginsOnDisk(serverPlugins) {
+    var deferred = q.defer();
+    loadPluginsFromDisk().
+    then(function(onDiskPlugins) {
+      if(_.isEqual(serverPlugins, onDiskPlugins)) {
+        grunt.log.ok('All ' + serverPlugins.length + ' plugins verified!');
+      } else {
+        grunt.log.error('Plugins mismatched.');
+      }
+      deferred.resolve();
+    });
+    return deferred.promise;
+  }
+  
   // ==========================================================================
   // TASKS
   // ==========================================================================
@@ -337,12 +351,19 @@ module.exports = function(grunt) {
       }).
       then(function() { done(true); }, logError);
   });
-  
+
   grunt.registerTask('jenkins-verify-jobs', 'verify job configurations in Jenkins match the on-disk versions', function() {
     var done = this.async();
-      fetchJobsFromServer().
+    fetchJobsFromServer().
       then(fetchJobConfigurations).
       then(compareToJobsOnDisk).
+      then(function() { done(true); });
+  });
+
+  grunt.registerTask('jenkins-verify-plugins', 'verify plugins in Jenkins match the on-disk versions', function() {
+    var done = this.async();
+    fetchEnabledPluginsFromServer().
+      then(compareToPluginsOnDisk).
       then(function() { done(true); });
   });
 };
