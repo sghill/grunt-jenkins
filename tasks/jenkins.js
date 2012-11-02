@@ -307,7 +307,7 @@ module.exports = function(grunt) {
         grunt.log.error('Plugins mismatched.');
       }
       deferred.resolve(result);
-    });
+    }, logError);
     return deferred.promise;
   }
   
@@ -380,7 +380,6 @@ module.exports = function(grunt) {
       then(function(result) { done(result); }, logError);
   });
 
-  // if no plugins, this has no output at all. it should fail
   grunt.registerTask('jenkins-verify-plugins', 'verify plugins in Jenkins match the on-disk versions', function() {
     var done = this.async();
     fetchEnabledPluginsFromServer().
