@@ -292,7 +292,7 @@ module.exports = function(grunt) {
             }
           })
         });
-      });
+      }, logError);
     return deferred.promise;
   }
   
