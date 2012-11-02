@@ -282,12 +282,13 @@ module.exports = function(grunt) {
     var deferred = q.defer();
     loadPluginsFromDisk().
     then(function(onDiskPlugins) {
-      if(_.isEqual(serverPlugins, onDiskPlugins)) {
+      var result = _.isEqual(serverPlugins, onDiskPlugins);
+      if(result) {
         grunt.log.ok('All ' + serverPlugins.length + ' plugins verified!');
       } else {
         grunt.log.error('Plugins mismatched.');
       }
-      deferred.resolve();
+      deferred.resolve(result);
     });
     return deferred.promise;
   }
@@ -364,6 +365,6 @@ module.exports = function(grunt) {
     var done = this.async();
     fetchEnabledPluginsFromServer().
       then(compareToPluginsOnDisk).
-      then(function() { done(true); });
+      then(function(result) { done(result); });
   });
 };
