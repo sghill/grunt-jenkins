@@ -1,7 +1,7 @@
-var request = require('request');
-var fs = require('fs');
-var _ = require('underscore');
-var q = require('q');
+var request = require('request'),
+    fs = require('fs'),
+    _ = require('underscore'),
+    q = require('q');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
