@@ -1,7 +1,8 @@
 var request = require('request'),
     fs = require('fs'),
     _ = require('underscore'),
-    q = require('q');
+    q = require('q'),
+    JenkinsServer = require('./jenkins-server');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
@@ -74,19 +75,6 @@ module.exports = function(grunt) {
       grunt.log.writeln(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});
     });
-    return deferred.promise;
-  }
-
-  function fetchJobsFromServer() {
-    var deferred = q.defer();
-    var url = [SERVER, 'api', 'json'].join('/');
-    
-    request(url, function(e, r, body) {
-      if(e) { return deferred.reject(e); }
-      var jobs = JSON.parse(body).jobs;
-      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
-    });
-    
     return deferred.promise;
   }
   
@@ -337,7 +325,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-backup-jobs', 'backup all Jenkins jobs', function() {
     var done = this.async();
-    fetchJobsFromServer().
+    var server = new JenkinsServer(SERVER);
+    server.fetchJobs().
       then(fetchJobConfigurations).
       then(writeToJobDirectories).
       then(function() { done(true); }, logError);
@@ -352,7 +341,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-list-jobs', 'list all found Jenkins jobs', function() {
     var done = this.async();
-    fetchJobsFromServer().
+    var server = new JenkinsServer(SERVER);
+    server.fetchJobs().
       then(function(jobs) {
         _.each(jobs, function(j) {
           grunt.log.writeln('job: ' + j.name + ' @ ' + j.url);
@@ -374,7 +364,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-verify-jobs', 'verify job configurations in Jenkins match the on-disk versions', function() {
     var done = this.async();
-    fetchJobsFromServer().
+    var server = new JenkinsServer(SERVER);
+    server.fetchJobs().
       then(fetchJobConfigurations).
       then(compareToJobsOnDisk).
       then(function(result) { done(result); }, logError);
