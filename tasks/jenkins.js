@@ -17,13 +17,10 @@ module.exports = function(grunt) {
 
   var SERVER = grunt.config('jenkins.serverAddress');
   var PIPELINE_DIRECTORY = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
+  var server = new JenkinsServer(SERVER);
 
   function logError(e) {
     grunt.log.error(e);
-  }
-  
-  function isLast(item, collection) {
-    return _.isEqual(item, _.last(collection));
   }
   
   function withDot(filename) {
@@ -80,24 +77,24 @@ module.exports = function(grunt) {
   
   function fetchJobConfigurations(jobs) {
     var deferred = q.defer();
-    var jobConfigurations = [];
-    var errors = [];
-    var responseCodes = [];
-    _.each(jobs, function(j) {
+    var promises = _.map(jobs, function(j) {
+      var d = q.defer();
       request([j.url, 'config.xml'].join(''), function(e, r, body) {
-        errors.push(e);
-        responseCodes.push(r.statusCode);
+        if(e) { return d.reject(e); }
         j.config = body;
-        jobConfigurations.push(j);
-        if(isLast(j, jobs)) {
-          if(_.any(errors, function(e) { return e; }) || 
-             _.any(responseCodes, function(c) { return c !== 200; })) {
-            return deferred.reject();
-          }
-          deferred.resolve(jobConfigurations);
+        d.resolve(j)
+      });
+      return d.promise;
+    });
+    
+    q.allResolved(promises).
+      then(function(promises) {
+        if(_.all(promises, function(p) { return p.isFulfilled(); })) {
+          deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }));
+        } else {
+          deferred.resolve();
         }
       });
-    });
     return deferred.promise;
   }
     
@@ -233,19 +230,29 @@ module.exports = function(grunt) {
 
   function writeToJobDirectories(jobs) {
     var deferred = q.defer();
-    _.each(jobs, function(j) {
+    var fileWritingPromises = _.map(jobs, function(j, index) {
+      var d = q.defer();
       ensureDirectoriesExist([PIPELINE_DIRECTORY, j.name]);
       var filename = [PIPELINE_DIRECTORY, j.name, 'config.xml'].join('/');
 
       fs.writeFile(filename, j.config, 'utf8', function(e) {
-        if(e) { return deferred.reject(e); }
+        if(e) { return d.reject(e); }
 
         grunt.log.ok('created file: ' + filename);
-        if(isLast(j, jobs)) {
-          deferred.resolve(jobs);
-        }
+        d.resolve(filename);
       });
+      return d.promise;
     });
+    
+    q.allResolved(fileWritingPromises).
+    then(function(promises) {
+      if(_.all(promises, function(p) { return p.isFulfilled(); })) {
+        deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }))
+      } else {
+        deferred.reject()
+      }
+    });
+    
     return deferred.promise;
   }
   
@@ -260,14 +267,14 @@ module.exports = function(grunt) {
         }
         var results = [];
         var errors = [];
-        _.each(jobNames, function(name) {
+        _.each(jobNames, function(name, index) {
           var filename = [PIPELINE_DIRECTORY, name, 'config.xml'].join('/');
           fs.readFile(filename, function(e, contents) {
             if(e) { errors.push(e); }
             var serverJob = _.find(serverJobsAndConfigurations, function(j) { return j.name === name; });
             if(serverJob) { //sometimes this comes back with nothing, figure out what the deal is
               results.push(serverJob.config === contents.toString());
-              if(isLast(name, jobNames)) {
+              if((index + 1) === jobNames.length) {
                 var result = _.all(results, function(r) { return r; }) && 
                             !_.any(errors, function(e) { return e; });
                 if(result) {
@@ -325,7 +332,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-backup-jobs', 'backup all Jenkins jobs', function() {
     var done = this.async();
-    var server = new JenkinsServer(SERVER);
     server.fetchJobs().
       then(fetchJobConfigurations).
       then(writeToJobDirectories).
@@ -341,7 +347,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-list-jobs', 'list all found Jenkins jobs', function() {
     var done = this.async();
-    var server = new JenkinsServer(SERVER);
     server.fetchJobs().
       then(function(jobs) {
         _.each(jobs, function(j) {
@@ -364,7 +369,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-verify-jobs', 'verify job configurations in Jenkins match the on-disk versions', function() {
     var done = this.async();
-    var server = new JenkinsServer(SERVER);
     server.fetchJobs().
       then(fetchJobConfigurations).
       then(compareToJobsOnDisk).

@@ -1,6 +1,7 @@
 var q = require('q'),
     request = require('request'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    grunt = require('grunt');
 
 function JenkinsServer(serverUrl) {
   this.fetchJobs = function() {
@@ -10,6 +11,7 @@ function JenkinsServer(serverUrl) {
     request(url, function(e, r, body) {
       if(e) { return deferred.reject(e); }
       var jobs = JSON.parse(body).jobs;
+      grunt.log.writeln('Found ' + jobs.length + ' jobs.');
       deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
     
