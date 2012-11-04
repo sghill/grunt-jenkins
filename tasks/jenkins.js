@@ -12,7 +12,7 @@ var request = require('request'),
  */
 
 module.exports = function(grunt) {
-  
+
   grunt.config.requires('jenkins.serverAddress');
 
   var SERVER = grunt.config('jenkins.serverAddress');
@@ -22,11 +22,11 @@ module.exports = function(grunt) {
   function logError(e) {
     grunt.log.error(e);
   }
-  
+
   function withDot(filename) {
     return (/\./).test(filename);
   }
-   
+
   function loadJobsFromDisk() {
     var deferred = q.defer();
     fs.readdir(PIPELINE_DIRECTORY, function(e, contents) {
@@ -37,7 +37,7 @@ module.exports = function(grunt) {
     });
     return deferred.promise;
   }
-  
+
   function fetchFileContents(fileAndJob) {
     var deferred = q.defer();
     fs.readFile(fileAndJob.fileName, function(e, contents) {
@@ -56,14 +56,14 @@ module.exports = function(grunt) {
     });
     return deferred.promise;
   }
-  
+
   function transformToJenkinsXml(plugins) {
-    var attributes = _.map(plugins, function(p) { 
-      return ['<install plugin="', p.id, '@', p.version, '" />'].join(''); 
+    var attributes = _.map(plugins, function(p) {
+      return ['<install plugin="', p.id, '@', p.version, '" />'].join('');
     }).join('\n');
-    return ['<jenkins>', attributes, '</jenkins>'].join('\n'); 
+    return ['<jenkins>', attributes, '</jenkins>'].join('\n');
   }
-      
+
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer();
     var url = [SERVER, 'job', job, 'config.xml'].join('/');
@@ -74,7 +74,7 @@ module.exports = function(grunt) {
     });
     return deferred.promise;
   }
-  
+
   function fetchJobConfigurations(jobs) {
     var deferred = q.defer();
     var promises = _.map(jobs, function(j) {
@@ -82,11 +82,11 @@ module.exports = function(grunt) {
       request([j.url, 'config.xml'].join(''), function(e, r, body) {
         if(e) { return d.reject(e); }
         j.config = body;
-        d.resolve(j)
+        d.resolve(j);
       });
       return d.promise;
     });
-    
+
     q.allResolved(promises).
       then(function(promises) {
         if(_.all(promises, function(p) { return p.isFulfilled(); })) {
@@ -97,7 +97,7 @@ module.exports = function(grunt) {
       });
     return deferred.promise;
   }
-    
+
   function createJob (config) {
     var deferred = q.defer();
     var options = {
@@ -119,7 +119,7 @@ module.exports = function(grunt) {
 
     return deferred.promise;
   }
-  
+
   function updateJob (config) {
     var deferred = q.defer(),
         options = {
@@ -186,7 +186,7 @@ module.exports = function(grunt) {
       if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
-     
+
     return deferred.promise;
   }
 
@@ -203,7 +203,7 @@ module.exports = function(grunt) {
 
     return deferred.promise;
   }
-  
+
   function ensureDirectoriesExist(directories) {
     _.each(directories, function(d, index) {
       var path = _.take(directories, (index + 1)).join('/');
@@ -212,7 +212,7 @@ module.exports = function(grunt) {
       }
     });
   }
-  
+
   function writeFileToPipelineDirectory(plugins) {
     var deferred = q.defer();
     ensureDirectoriesExist([PIPELINE_DIRECTORY]);
@@ -243,19 +243,19 @@ module.exports = function(grunt) {
       });
       return d.promise;
     });
-    
+
     q.allResolved(fileWritingPromises).
     then(function(promises) {
       if(_.all(promises, function(p) { return p.isFulfilled(); })) {
-        deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }))
+        deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }));
       } else {
-        deferred.reject()
+        deferred.reject();
       }
     });
-    
+
     return deferred.promise;
   }
-  
+
   function compareToJobsOnDisk(serverJobsAndConfigurations) {
     var deferred = q.defer();
     loadJobsFromDisk().
@@ -275,7 +275,7 @@ module.exports = function(grunt) {
             if(serverJob) { //sometimes this comes back with nothing, figure out what the deal is
               results.push(serverJob.config === contents.toString());
               if((index + 1) === jobNames.length) {
-                var result = _.all(results, function(r) { return r; }) && 
+                var result = _.all(results, function(r) { return r; }) &&
                             !_.any(errors, function(e) { return e; });
                 if(result) {
                   grunt.log.ok('All ' + jobNames.length + ' jobs verified!');
@@ -285,12 +285,12 @@ module.exports = function(grunt) {
                 deferred.resolve(result);
               }
             }
-          })
+          });
         });
       }, logError);
     return deferred.promise;
   }
-  
+
   function compareToPluginsOnDisk(serverPlugins) {
     var deferred = q.defer();
     loadPluginsFromDisk().
@@ -305,7 +305,7 @@ module.exports = function(grunt) {
     }, logError);
     return deferred.promise;
   }
-  
+
   // ==========================================================================
   // TASKS
   // ==========================================================================
