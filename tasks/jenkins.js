@@ -1,7 +1,7 @@
 var fs = require('fs'),
     _ = require('underscore'),
     q = require('q'),
-    JenkinsServer = require('./jenkins-server');
+    JenkinsServer = require('./jenkinsServer');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
