@@ -3,7 +3,7 @@ var q = require('q'),
     request = require('request'),
     grunt = require('grunt');
 
-function JenkinsServer(serverUrl) {
+function JenkinsServer(serverUrl, fileSystem) {
   this.fetchJobs = function() {
     var deferred = q.defer();
     var url = [serverUrl, 'api', 'json'].join('/');
@@ -138,7 +138,7 @@ function JenkinsServer(serverUrl) {
 
   function applyStrategy (strategyObj) {
     var deferred = q.defer(),
-        filename = [PIPELINE_DIRECTORY, strategyObj.jobName, 'config.xml'].join('/'),
+        filename = [fileSystem.pipelineDirectory, strategyObj.jobName, 'config.xml'].join('/'),
         fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
 
     function resolve (val) {
@@ -146,11 +146,11 @@ function JenkinsServer(serverUrl) {
     }
 
     if(strategyObj.strategy === 'create') {
-      fetchFileContents(fileStrategy).
+      fileSystem.readFile(fileStrategy).
         then(createJob).
         then(resolve);
     } else if (strategyObj.strategy === 'update') {
-      fetchFileContents(fileStrategy).
+      fileSystem.readFile(fileStrategy).
         then(updateJob).
         then(resolve);
     }

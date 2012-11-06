@@ -1,7 +1,8 @@
 var fs = require('fs'),
     _ = require('underscore'),
     q = require('q'),
-    JenkinsServer = require('./jenkinsServer');
+    JenkinsServer = require('./jenkinsServer'),
+    FileSystem = require('./fileSystem');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
@@ -14,9 +15,10 @@ module.exports = function(grunt) {
 
   grunt.config.requires('jenkins.serverAddress');
 
-  var SERVER = grunt.config('jenkins.serverAddress');
-  var PIPELINE_DIRECTORY = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
-  var server = new JenkinsServer(SERVER);
+  var fileSystem = new FileSystem(grunt.config('jenkins.pipelineDirectory') || 'pipeline');
+  var server = new JenkinsServer(grunt.config('jenkins.serverAddress'), fileSystem);
+  
+  var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
   function logError(e) {
     grunt.log.error(e);
@@ -33,15 +35,6 @@ module.exports = function(grunt) {
       // assumption: we don't have periods in our job names
       var directories = _.reject(contents, withDot);
       deferred.resolve(directories);
-    });
-    return deferred.promise;
-  }
-
-  function fetchFileContents(fileAndJob) {
-    var deferred = q.defer();
-    fs.readFile(fileAndJob.fileName, function(e, contents) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
     });
     return deferred.promise;
   }
@@ -236,7 +229,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-verify-plugins', 'verify plugins in Jenkins match the on-disk versions', function() {
     var done = this.async();
-    fetchEnabledPluginsFromServer().
+    server.fetchEnabledPlugins().
       then(compareToPluginsOnDisk).
       then(function(result) { done(result); }, logError);
   });
