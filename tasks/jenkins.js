@@ -1,5 +1,4 @@
-var request = require('request'),
-    fs = require('fs'),
+var fs = require('fs'),
     _ = require('underscore'),
     q = require('q'),
     JenkinsServer = require('./jenkins-server');
@@ -62,146 +61,6 @@ module.exports = function(grunt) {
       return ['<install plugin="', p.id, '@', p.version, '" />'].join('');
     }).join('\n');
     return ['<jenkins>', attributes, '</jenkins>'].join('\n');
-  }
-
-  function fetchJobConfigurationStrategy(job) {
-    var deferred = q.defer();
-    var url = [SERVER, 'job', job, 'config.xml'].join('/');
-    request(url, function(e, r, b) {
-      var strategy = r.statusCode === 200 ? 'update' : 'create';
-      grunt.log.writeln(strategy + ': ' + job);
-      deferred.resolve({strategy: strategy, jobName: job});
-    });
-    return deferred.promise;
-  }
-
-  function fetchJobConfigurations(jobs) {
-    var deferred = q.defer();
-    var promises = _.map(jobs, function(j) {
-      var d = q.defer();
-      request([j.url, 'config.xml'].join(''), function(e, r, body) {
-        if(e) { return d.reject(e); }
-        j.config = body;
-        d.resolve(j);
-      });
-      return d.promise;
-    });
-
-    q.allResolved(promises).
-      then(function(promises) {
-        if(_.all(promises, function(p) { return p.isFulfilled(); })) {
-          deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }));
-        } else {
-          deferred.resolve();
-        }
-      });
-    return deferred.promise;
-  }
-
-  function createJob (config) {
-    var deferred = q.defer();
-    var options = {
-      url: [SERVER, 'createItem'].join('/'),
-      method: 'POST',
-      qs: {
-        name: config.jobName
-      },
-      headers: {
-        'Content-Type': 'text/xml'
-      },
-      body: config.fileContents
-    };
-
-    request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve(r.statusCode === 200);
-    });
-
-    return deferred.promise;
-  }
-
-  function updateJob (config) {
-    var deferred = q.defer(),
-        options = {
-      url: [SERVER, 'job', config.jobName, 'config.xml'].join('/'),
-      method: 'POST',
-      body: config.fileContents
-    };
-
-    request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve(r.statusCode === 200);
-    });
-
-    return deferred.promise;
-  }
-
-  function applyStrategy (strategyObj) {
-    var deferred = q.defer(),
-        filename = [PIPELINE_DIRECTORY, strategyObj.jobName, 'config.xml'].join('/'),
-        fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
-
-    function resolve (val) {
-      deferred.resolve(val);
-    }
-
-    if(strategyObj.strategy === 'create') {
-      fetchFileContents(fileStrategy).
-        then(createJob).
-        then(resolve);
-    } else if (strategyObj.strategy === 'update') {
-      fetchFileContents(fileStrategy).
-        then(updateJob).
-        then(resolve);
-    }
-
-    return deferred.promise;
-  }
-
-  function createOrUpdateJobs(directories) {
-    var deferred = q.defer();
-
-    function resolve (val) {
-      deferred.resolve(val);
-    }
-
-    _.each(directories, function(folder) {
-      fetchJobConfigurationStrategy(folder).
-        then(applyStrategy).
-        then(resolve);
-    });
-
-    return deferred.promise;
-  }
-
-  function installPlugins(xml) {
-    var deferred = q.defer(),
-        options = {
-          url: [SERVER, 'pluginManager', 'installNecessaryPlugins'].join('/'),
-          method: 'POST',
-          body: xml
-        };
-
-    request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve(r.statusCode === 200);
-    });
-
-    return deferred.promise;
-  }
-
-  function fetchEnabledPluginsFromServer() {
-    var url = [SERVER, 'pluginManager', 'api', 'json?depth=1'].join('/');
-    var deferred = q.defer();
-
-    request(url, function(e, r, body) {
-      var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
-      var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
-
-      deferred.resolve(plugins);
-    });
-
-    return deferred.promise;
   }
 
   function ensureDirectoriesExist(directories) {
@@ -318,7 +177,7 @@ module.exports = function(grunt) {
   grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
     loadJobsFromDisk().
-      then(createOrUpdateJobs).
+      then(server.createOrUpdateJobs).
       then(function() { done(true); }, logError);
   });
 
@@ -326,21 +185,21 @@ module.exports = function(grunt) {
     var done = this.async();
     loadPluginsFromDisk().
       then(transformToJenkinsXml).
-      then(installPlugins).
+      then(server.installPlugins).
       then(function() { done(true); }, logError);
   });
 
   grunt.registerTask('jenkins-backup-jobs', 'backup all Jenkins jobs', function() {
     var done = this.async();
     server.fetchJobs().
-      then(fetchJobConfigurations).
+      then(server.fetchJobConfigurations).
       then(writeToJobDirectories).
       then(function() { done(true); }, logError);
   });
 
   grunt.registerTask('jenkins-backup-plugins', 'backup all enabled Jenkins plugins', function() {
     var done = this.async();
-    fetchEnabledPluginsFromServer().
+    server.fetchEnabledPlugins().
       then(writeFileToPipelineDirectory).
       then(function() { done(true); }, logError);
   });
@@ -358,7 +217,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-list-plugins', 'list all enabled Jenkins plugins', function() {
     var done = this.async();
-    fetchEnabledPluginsFromServer().
+    server.fetchEnabledPlugins().
       then(function(plugins) {
         _.each(plugins, function(p) {
           grunt.log.writeln('plugin id: ' + p.id + ', version: ' + p.version);
@@ -370,7 +229,7 @@ module.exports = function(grunt) {
   grunt.registerTask('jenkins-verify-jobs', 'verify job configurations in Jenkins match the on-disk versions', function() {
     var done = this.async();
     server.fetchJobs().
-      then(fetchJobConfigurations).
+      then(server.fetchJobConfigurations).
       then(compareToJobsOnDisk).
       then(function(result) { done(result); }, logError);
   });
