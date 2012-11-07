@@ -24,31 +24,6 @@ module.exports = function(grunt) {
     grunt.log.error(e);
   }
 
-  function withDot(filename) {
-    return (/\./).test(filename);
-  }
-
-  function loadJobsFromDisk() {
-    var deferred = q.defer();
-    fs.readdir(PIPELINE_DIRECTORY, function(e, contents) {
-      if(e) { return deferred.reject(e); }
-      // assumption: we don't have periods in our job names
-      var directories = _.reject(contents, withDot);
-      deferred.resolve(directories);
-    });
-    return deferred.promise;
-  }
-
-  function loadPluginsFromDisk() {
-    var deferred = q.defer();
-    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
-    fs.readFile(filename, function(e, contents) {
-      if(e || _.isUndefined(contents)) { return deferred.reject(e); }
-      deferred.resolve(JSON.parse(contents));
-    });
-    return deferred.promise;
-  }
-
   function transformToJenkinsXml(plugins) {
     var attributes = _.map(plugins, function(p) {
       return ['<install plugin="', p.id, '@', p.version, '" />'].join('');
@@ -56,61 +31,9 @@ module.exports = function(grunt) {
     return ['<jenkins>', attributes, '</jenkins>'].join('\n');
   }
 
-  function ensureDirectoriesExist(directories) {
-    _.each(directories, function(d, index) {
-      var path = _.take(directories, (index + 1)).join('/');
-      if(!fs.existsSync(path)) {
-        fs.mkdirSync(path);
-      }
-    });
-  }
-
-  function writeFileToPipelineDirectory(plugins) {
-    var deferred = q.defer();
-    ensureDirectoriesExist([PIPELINE_DIRECTORY]);
-    var filename = [PIPELINE_DIRECTORY, 'plugins.json'].join('/');
-    var body = JSON.stringify(plugins, null, 2);
-    fs.writeFile(filename, body, 'utf8', function(e) {
-      if(e) { return deferred.reject(e); }
-
-      grunt.log.ok('created file: ' + filename);
-      deferred.resolve();
-    });
-
-    return deferred.promise;
-  }
-
-  function writeToJobDirectories(jobs) {
-    var deferred = q.defer();
-    var fileWritingPromises = _.map(jobs, function(j, index) {
-      var d = q.defer();
-      ensureDirectoriesExist([PIPELINE_DIRECTORY, j.name]);
-      var filename = [PIPELINE_DIRECTORY, j.name, 'config.xml'].join('/');
-
-      fs.writeFile(filename, j.config, 'utf8', function(e) {
-        if(e) { return d.reject(e); }
-
-        grunt.log.ok('created file: ' + filename);
-        d.resolve(filename);
-      });
-      return d.promise;
-    });
-
-    q.allResolved(fileWritingPromises).
-    then(function(promises) {
-      if(_.all(promises, function(p) { return p.isFulfilled(); })) {
-        deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }));
-      } else {
-        deferred.reject();
-      }
-    });
-
-    return deferred.promise;
-  }
-
   function compareToJobsOnDisk(serverJobsAndConfigurations) {
     var deferred = q.defer();
-    loadJobsFromDisk().
+    fileSystem.loadJobs().
       then(function(jobNames) {
         var serverJobNames = _.pluck(serverJobsAndConfigurations, 'name');
         if(!_.isEmpty(_.difference(serverJobNames, jobNames))) {
@@ -145,7 +68,7 @@ module.exports = function(grunt) {
 
   function compareToPluginsOnDisk(serverPlugins) {
     var deferred = q.defer();
-    loadPluginsFromDisk().
+    fileSystem.loadPlugins().
     then(function(onDiskPlugins) {
       var result = _.isEqual(serverPlugins, onDiskPlugins);
       if(result) {
@@ -169,14 +92,14 @@ module.exports = function(grunt) {
 
   grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
-    loadJobsFromDisk().
+    fileSystem.loadJobs().
       then(server.createOrUpdateJobs).
       then(function() { done(true); }, logError);
   });
 
   grunt.registerTask('jenkins-install-plugins', 'install all Jenkins plugins', function() {
     var done = this.async();
-    loadPluginsFromDisk().
+    fileSystem.loadPlugins().
       then(transformToJenkinsXml).
       then(server.installPlugins).
       then(function() { done(true); }, logError);
@@ -186,15 +109,15 @@ module.exports = function(grunt) {
     var done = this.async();
     server.fetchJobs().
       then(server.fetchJobConfigurations).
-      then(writeToJobDirectories).
-      then(function() { done(true); }, logError);
+      then(fileSystem.saveJobsToPipelineDirectory).
+      then(function(result) { done(result); }, logError);
   });
 
   grunt.registerTask('jenkins-backup-plugins', 'backup all enabled Jenkins plugins', function() {
     var done = this.async();
     server.fetchEnabledPlugins().
-      then(writeFileToPipelineDirectory).
-      then(function() { done(true); }, logError);
+      then(fileSystem.savePluginsToPipelineDirectory).
+      then(function(result) { done(result); }, logError);
   });
 
   grunt.registerTask('jenkins-list-jobs', 'list all found Jenkins jobs', function() {
