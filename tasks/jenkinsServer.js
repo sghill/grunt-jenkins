@@ -34,16 +34,19 @@ function JenkinsServer(serverUrl, fileSystem) {
     return deferred.promise;
   };
 
-  this.installPlugins = function(xml) {
+  this.installPlugins = function(plugins) {
     var deferred = q.defer(),
         options = {
           url: [serverUrl, 'pluginManager', 'installNecessaryPlugins'].join('/'),
           method: 'POST',
-          body: xml
+          body: plugins.xml
         };
 
     request(options, function(e, r, b) {
       if(e) { return deferred.reject(e); }
+      _.each(plugins.plugins, function(p) {
+        grunt.log.ok('install: ' + p.id + ' @ ' + p.version);
+      })
       deferred.resolve(r.statusCode === 200);
     });
 
@@ -130,7 +133,7 @@ function JenkinsServer(serverUrl, fileSystem) {
     var url = [serverUrl, 'job', job, 'config.xml'].join('/');
     request(url, function(e, r, b) {
       var strategy = r.statusCode === 200 ? 'update' : 'create';
-      grunt.log.writeln(strategy + ': ' + job);
+      grunt.log.ok(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});
     });
     return deferred.promise;

@@ -28,7 +28,10 @@ module.exports = function(grunt) {
     var attributes = _.map(plugins, function(p) {
       return ['<install plugin="', p.id, '@', p.version, '" />'].join('');
     }).join('\n');
-    return ['<jenkins>', attributes, '</jenkins>'].join('\n');
+    return {
+      xml: ['<jenkins>', attributes, '</jenkins>'].join('\n'),
+      plugins: plugins
+    };
   }
 
   function compareToJobsOnDisk(serverJobsAndConfigurations) {
