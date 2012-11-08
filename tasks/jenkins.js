@@ -40,27 +40,36 @@ module.exports = function(grunt) {
           grunt.log.error('Jobs mismatch.');
           return deferred.resolve(false);
         }
-        var results = [];
-        var errors = [];
-        _.each(jobNames, function(name, index) {
-          var filename = [PIPELINE_DIRECTORY, name, 'config.xml'].join('/');
+
+        var filePromises = _.map(jobNames, function(name) {
+          var filename = [fileSystem.pipelineDirectory, name, 'config.xml'].join('/');
+          var d = q.defer();
           fs.readFile(filename, function(e, contents) {
-            if(e) { errors.push(e); }
-            var serverJob = _.find(serverJobsAndConfigurations, function(j) { return j.name === name; });
-            if(serverJob) { //sometimes this comes back with nothing, figure out what the deal is
-              results.push(serverJob.config === contents.toString());
-              if((index + 1) === jobNames.length) {
-                var result = _.all(results, function(r) { return r; }) &&
-                            !_.any(errors, function(e) { return e; });
-                if(result) {
-                  grunt.log.ok('All ' + jobNames.length + ' jobs verified!');
-                } else {
-                  grunt.log.error('Jobs configuration mismatch.');
-                }
-                deferred.resolve(result);
-              }
-            }
+            if(e) { return d.reject(e); }
+            d.resolve({name: name, contents: contents});
           });
+          return d.promise;
+        });
+
+        q.allResolved(filePromises)
+          .then(function(promises) {
+            if(_.all(promises, function(p) { return p.isFulfilled(); })) {
+              var allJobsAreEqual = _.reduce(promises, function(memo, p) {
+                var diskContents = p.valueOf().contents;
+                var serverContents = _.find(serverJobsAndConfigurations, function(j) { return j.name === p.valueOf().name; });
+                return memo && (diskContents.toString() === serverContents.config);
+              }, true);
+              if(allJobsAreEqual) {
+                grunt.log.ok('All ' + jobNames.length + ' jobs verified!');
+                deferred.resolve(true);
+              } else {
+                grunt.log.error('Jobs configuration mismatch.');
+                deferred.resolve(false);
+              }
+            } else {
+              grunt.log.error('Problem getting jobs configuration from server.');
+              deferred.reject();
+            }
         });
       }, logError);
     return deferred.promise;

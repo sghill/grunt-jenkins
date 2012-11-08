@@ -25,7 +25,7 @@ function FileSystem(pipelineDirectory) {
       deferred.resolve(directories);
     });
     return deferred.promise;
-  }
+  };
 
   this.loadPlugins = function() {
     var deferred = q.defer();
@@ -35,7 +35,7 @@ function FileSystem(pipelineDirectory) {
       deferred.resolve(JSON.parse(contents));
     });
     return deferred.promise;
-  }
+  };
 
   this.savePluginsToPipelineDirectory = function(plugins) {
     var deferred = q.defer();
@@ -50,7 +50,7 @@ function FileSystem(pipelineDirectory) {
     });
 
     return deferred.promise;
-  }
+  };
 
   this.saveJobsToPipelineDirectory = function(jobs) {
     var deferred = q.defer();
@@ -78,7 +78,7 @@ function FileSystem(pipelineDirectory) {
       });
 
     return deferred.promise;
-  }
+  };
 
   function withDot(filename) {
     return (/\./).test(filename);

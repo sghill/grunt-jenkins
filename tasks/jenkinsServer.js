@@ -81,7 +81,7 @@ function JenkinsServer(serverUrl, fileSystem) {
         if(_.all(promises, function(p) { return p.isFulfilled(); })) {
           deferred.resolve(_.map(promises, function(p) { return p.valueOf(); }));
         } else {
-          deferred.resolve();
+          deferred.reject();
         }
       });
     return deferred.promise;
