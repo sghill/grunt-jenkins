@@ -5,7 +5,7 @@
   "homepage": "https://github.com/sghill/grunt-jenkins",
   "author": {
     "name": "sghill",
-    "email": "sg@sghill.net"
+    "email": "steve@sghill.net"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,9 @@
     "q": "0.8.9"
   },
   "keywords": [
-    "gruntplugin"
+    "gruntplugin",
+    "jenkins",
+    "ci"
   ]
 }
+
