@@ -39,7 +39,7 @@ Having our jobs in source control is great, but it can't make us completely conf
 [jenkins_home]: http://jenkins-ci.org/
 
 ## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [grunt][grunt].
+In lieu of a formal styleguide, take care to maintain the existing coding style. Lint your code using [grunt][grunt].
 
 ## Release History
 ### `0.1.0` on 11-Nov-2012, from the Alaskan skies!
