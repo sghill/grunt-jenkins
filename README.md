@@ -18,7 +18,7 @@ You'll need a little bit of configuration as well.
 ### Config example
 ```javascript
 jenkins: {
-  serverAddress: http://localhost:8080,
+  serverAddress: 'http://localhost:8080',
   pipelineDirectory: 'jenkins-pipeline'
 }
 ```
@@ -43,18 +43,22 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 ### `0.1.0` on 11-Nov-2012, from the Alaskan skies!
-* jobs-related tasks
-** list all jobs on a server with `jenkins-list-jobs`
-** backup every job's config.xml to _pipeline-directory_/_job-name_/config.xml with `jenkins-backup-jobs`
-** verify each configuration in _pipeline-directory_/ matches the job configurations on the server with `jenkins-verify-jobs`
-** install jobs from _pipeline-directory_/ with `jenkins-install-jobs`
-* plugins-related tasks
-** list all enabled plugins and their versions with `jenkins-list-plugins`
-** backup plugins to _pipeline-directory_/plugins.json with `jenkins-backup-plugins`
-** verify plugins in _pipeline-directory_/plugins.json match the plugins on the server with `jenkins-verify-plugins`
-** install plugins from _pipeline-directory_/plugins.json with `jenkins-install-plugins`
-* convenience tasks
-** for each of the tasks above, a shorter version exists that will run both. e.g. -- `jenkins-list` will run `jenkins-list-jobs` and `jenkins-list-plugins`
+
+#### jobs-related tasks
+* list all jobs on a server with `jenkins-list-jobs`
+* backup every job's config.xml to _pipeline-directory_/_job-name_/config.xml with `jenkins-backup-jobs`
+* verify each configuration in _pipeline-directory_/ matches the job configurations on the server with `jenkins-verify-jobs`
+* install jobs from _pipeline-directory_/ with `jenkins-install-jobs`
+
+#### plugins-related tasks
+* list all enabled plugins and their versions with `jenkins-list-plugins`
+* backup plugins to _pipeline-directory_/plugins.json with `jenkins-backup-plugins`
+* verify plugins in _pipeline-directory_/plugins.json match the plugins on the server with `jenkins-verify-plugins`
+* install plugins from _pipeline-directory_/plugins.json with `jenkins-install-plugins`
+
+#### convenience tasks
+
+* for each of the tasks above, a shorter version exists that will run both: `jenkins-list` will run `jenkins-list-jobs` and `jenkins-list-plugins`
 
 ## License
 Copyright (c) 2012 sghill  
