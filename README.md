@@ -42,6 +42,10 @@ Having our jobs in source control is great, but it can't make us completely conf
 In lieu of a formal styleguide, take care to maintain the existing coding style. Lint your code using [grunt][grunt].
 
 ## Release History
+
+### `0.1.1` on 12-Nov-2012
+* inject `grunt` instance into `JenkinsServer` and `FileSystem` classes, as globally-installed grunt instances couldn't be `require`d
+
 ### `0.1.0` on 11-Nov-2012, from the Alaskan skies!
 
 #### jobs-related tasks
