@@ -1,9 +1,8 @@
 var q = require('q'),
     _ = require('underscore'),
-    grunt = require('grunt'),
     fs = require('fs');
 
-function FileSystem(pipelineDirectory) {
+function FileSystem(pipelineDirectory, grunt) {
 
   this.pipelineDirectory = pipelineDirectory;
 

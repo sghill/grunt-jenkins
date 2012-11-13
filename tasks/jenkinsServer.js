@@ -1,9 +1,8 @@
 var q = require('q'),
     _ = require('underscore'),
-    request = require('request'),
-    grunt = require('grunt');
+    request = require('request');
 
-function JenkinsServer(serverUrl, fileSystem) {
+function JenkinsServer(serverUrl, fileSystem, grunt) {
   this.fetchJobs = function() {
     var deferred = q.defer();
     var url = [serverUrl, 'api', 'json'].join('/');

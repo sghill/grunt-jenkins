@@ -14,9 +14,11 @@ var fs = require('fs'),
 module.exports = function(grunt) {
 
   grunt.config.requires('jenkins.serverAddress');
+  var pipelineDirectory = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
+  var serverAddress = grunt.config('jenkins.serverAddress');
 
-  var fileSystem = new FileSystem(grunt.config('jenkins.pipelineDirectory') || 'pipeline');
-  var server = new JenkinsServer(grunt.config('jenkins.serverAddress'), fileSystem);
+  var fileSystem = new FileSystem(pipelineDirectory, grunt);
+  var server = new JenkinsServer(serverAddress, fileSystem, grunt);
   
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
