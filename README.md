@@ -6,9 +6,9 @@ Manage Jenkins with Grunt
 The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 0.3.x`. Starting with `0.2.x`, `grunt-jenkins` is compatible with `grunt 0.4.x`.
 
 ## Getting Started
-Install this grunt plugin next to your project's [grunt.js gruntfile][getting_started] with: `npm install grunt-jenkins`
+Install this grunt plugin next to your project's [gruntfile][getting_started] with: `npm install grunt-jenkins --save-dev`
 
-Then add this line to your project's `grunt.js` gruntfile:
+Then add this line to your project's `Gruntfile.js` gruntfile:
 
 ```javascript
 grunt.loadNpmTasks('grunt-jenkins');
@@ -45,6 +45,9 @@ Having our jobs in source control is great, but it can't make us completely conf
 In lieu of a formal styleguide, take care to maintain the existing coding style. Lint your code using [grunt][grunt].
 
 ## Release History
+
+### `0.2.0` on 14-Apr-2013
+* compatibility with grunt 0.4.x
 
 ### `0.1.1` on 12-Nov-2012
 * inject `grunt` instance into `JenkinsServer` and `FileSystem` classes, as globally-installed grunt instances couldn't be `require`d
