@@ -2,6 +2,9 @@
 
 Manage Jenkins with Grunt
 
+## `grunt` info
+The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 0.3.x`. Starting with `0.2.x`, `grunt-jenkins` is compatible with `grunt 0.4.x`.
+
 ## Getting Started
 Install this grunt plugin next to your project's [grunt.js gruntfile][getting_started] with: `npm install grunt-jenkins`
 

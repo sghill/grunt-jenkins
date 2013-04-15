@@ -6,7 +6,7 @@ module.exports = function(grunt) {
       files: ['test/**/*.js']
     },
     lint: {
-      files: ['grunt.js', 'tasks/**/*.js', 'test/**/*.js']
+      files: ['Gruntfile.js', 'tasks/**/*.js', 'test/**/*.js']
     },
     watch: {
       files: '<config:lint.files>',
@@ -31,7 +31,7 @@ module.exports = function(grunt) {
       globals: {}
     },
     jenkins: {
-      serverAddress: 'http://192.168.241.137/'
+      serverAddress: 'http://localhost:8080/'
     }
   });
 
