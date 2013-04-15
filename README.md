@@ -8,13 +8,7 @@ The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 
 ## Getting Started
 Install this grunt plugin next to your project's [gruntfile][getting_started] with: `npm install grunt-jenkins --save-dev`
 
-Then add this line to your project's `Gruntfile.js` gruntfile:
-
-```javascript
-grunt.loadNpmTasks('grunt-jenkins');
-```
-
-You'll need a little bit of configuration as well.
+You'll need a bit of configuration (in your `grunt.initConfig`):
 * `serverAddress` includes the protocol and port
 * `pipelineDirectory` is optional, but relative to your gruntfile. Defaults to 'pipline'
 
@@ -24,6 +18,12 @@ jenkins: {
   serverAddress: 'http://localhost:8080',
   pipelineDirectory: 'jenkins-pipeline'
 }
+```
+
+Then add this line to your project's `Gruntfile.js` **after** `grunt.initConfig`:
+
+```javascript
+grunt.loadNpmTasks('grunt-jenkins');
 ```
 
 [grunt]: http://gruntjs.com/
