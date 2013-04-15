@@ -99,10 +99,10 @@ module.exports = function(grunt) {
   // TASKS
   // ==========================================================================
 
-  grunt.registerTask('jenkins-install', 'jenkins-install-jobs jenkins-install-plugins');
-  grunt.registerTask('jenkins-backup', 'jenkins-backup-jobs jenkins-backup-plugins');
-  grunt.registerTask('jenkins-list', 'jenkins-list-jobs jenkins-list-plugins');
-  grunt.registerTask('jenkins-verify', 'jenkins-verify-jobs jenkins-verify-plugins');
+  grunt.registerTask('jenkins-install', ['jenkins-install-jobs', 'jenkins-install-plugins']);
+  grunt.registerTask('jenkins-backup', ['jenkins-backup-jobs', 'jenkins-backup-plugins']);
+  grunt.registerTask('jenkins-list', ['jenkins-list-jobs', 'jenkins-list-plugins']);
+  grunt.registerTask('jenkins-verify', ['jenkins-verify-jobs', 'jenkins-verify-plugins']);
 
   grunt.registerTask('jenkins-install-jobs', 'install all Jenkins jobs', function() {
     var done = this.async();
