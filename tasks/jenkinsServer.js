@@ -45,7 +45,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
       if(e) { return deferred.reject(e); }
       _.each(plugins.plugins, function(p) {
         grunt.log.ok('install: ' + p.id + ' @ ' + p.version);
-      })
+      });
       deferred.resolve(r.statusCode === 200);
     });
 

@@ -2,17 +2,8 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    test: {
-      files: ['test/**/*.js']
-    },
-    lint: {
-      files: ['Gruntfile.js', 'tasks/**/*.js', 'test/**/*.js']
-    },
-    watch: {
-      files: '<config:lint.files>',
-      tasks: 'default'
-    },
     jshint: {
+      files: ['Gruntfile.js', 'tasks/*.js'],
       options: {
         curly: true,
         eqeqeq: true,
@@ -35,10 +26,12 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+
   // Load local tasks.
   grunt.loadTasks('tasks');
 
   // Default task.
-  grunt.registerTask('default', ['lint', 'test']);
+  grunt.registerTask('default', ['jshint']);
 
 };
