@@ -3,17 +3,26 @@ var q = require('q'),
     request = require('request');
 
 function JenkinsServer(serverUrl, fileSystem, grunt) {
+  function authentication() {
+    return {
+      auth: {
+        username: grunt.config('jenkins.username') || '',
+        password: grunt.config('jenkins.password') || ''
+      }
+    };
+  };
+
   this.fetchJobs = function() {
     var deferred = q.defer();
     var url = [serverUrl, 'api', 'json'].join('/');
-    
-    request(url, function(e, r, body) {
+
+    request(url, authentication(), function(e, r, body) {
       if(e) { return deferred.reject(e); }
       var jobs = JSON.parse(body).jobs;
       grunt.log.writeln(['Found', jobs.length, 'jobs.'].join(' '));
       deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
-    
+
     return deferred.promise;
   };
 
@@ -41,7 +50,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
           body: plugins.xml
         };
 
-    request(options, function(e, r, b) {
+    request(options, authentication(), function(e, r, b) {
       if(e) { return deferred.reject(e); }
       _.each(plugins.plugins, function(p) {
         grunt.log.ok('install: ' + p.id + ' @ ' + p.version);
@@ -56,7 +65,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
     var url = [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/');
     var deferred = q.defer();
 
-    request(url, function(e, r, body) {
+    request(url, authentication(), function(e, r, body) {
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
       var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
 
@@ -70,7 +79,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
     var deferred = q.defer();
     var promises = _.map(jobs, function(j) {
       var d = q.defer();
-      request([j.url, 'config.xml'].join(''), function(e, r, body) {
+      request([j.url, 'config.xml'].join(''), authentication(), function(e, r, body) {
         if(e) { return d.reject(e); }
         j.config = body;
         d.resolve(j);
@@ -103,7 +112,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
       body: config.fileContents
     };
 
-    request(options, function(e, r, b) {
+    request(options, authentication(), function(e, r, b) {
       if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
@@ -119,7 +128,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
       body: config.fileContents
     };
 
-    request(options, function(e, r, b) {
+    request(options, authentication(), function(e, r, b) {
       if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
     });
@@ -130,7 +139,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer();
     var url = [serverUrl, 'job', job, 'config.xml'].join('/');
-    request(url, function(e, r, b) {
+    request(url, authentication(), function(e, r, b) {
       var strategy = r.statusCode === 200 ? 'update' : 'create';
       grunt.log.ok(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});

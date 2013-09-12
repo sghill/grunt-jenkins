@@ -19,7 +19,7 @@ module.exports = function(grunt) {
 
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
   var server = new JenkinsServer(serverAddress, fileSystem, grunt);
-  
+
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
   function logError(e) {
