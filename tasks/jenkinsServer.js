@@ -1,13 +1,24 @@
 var q = require('q'),
     _ = require('underscore'),
-    request = require('request');
+    request = require('request'),
+    netrc = require('netrc');
 
 function JenkinsServer(serverUrl, fileSystem, grunt) {
+  function netrcInformation() {
+    var netrcPath = grunt.config('jenkins.netrcLocation') || '~/.netrc';
+    var machine = netrc(netrcPath)[grunt.config('jenkins.netrcMachine')];
+    return {
+      username: machine ? machine.login    : null,
+      password: machine ? machine.password : null
+    };
+  };
+
   function authentication() {
+    var netrcInfo = netrcInformation();
     return {
       auth: {
-        username: grunt.config('jenkins.username') || '',
-        password: grunt.config('jenkins.password') || ''
+        username: netrcInfo.username || grunt.config('jenkins.username') || '',
+        password: netrcInfo.password || grunt.config('jenkins.password') || ''
       }
     };
   };
