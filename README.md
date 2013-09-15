@@ -9,14 +9,17 @@ The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 
 Install this grunt plugin next to your project's [gruntfile][getting_started] with: `npm install grunt-jenkins --save-dev`
 
 You'll need a bit of configuration (in your `grunt.initConfig`):
-* `serverAddress` includes the protocol and port
-* `pipelineDirectory` is optional, but relative to your gruntfile. Defaults to 'pipline'
 
 ### Config example
 ```javascript
 jenkins: {
-  serverAddress: 'http://localhost:8080',
-  pipelineDirectory: 'jenkins-pipeline'
+  serverAddress: 'http://localhost:8080'
+ ,pipelineDirectory: 'jenkins-pipeline'   // optional, default: 'pipeline'
+
+  // for password-protected jenkins instances only
+ ,netrcLocation: '/some/path/netrc'       // optional, preferred, default: '~/.netrc'
+ ,username: 'alf'                         // optional, default: ''
+ ,password: 's3cret'                      // optional, default: ''
 }
 ```
 
@@ -46,6 +49,9 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 
+### `0.3.0` on 15-Sep-2013
+* compatibility with password-protected jenkins instances via [.netrc][netrc] or username/password. Thanks @panozzaj!
+
 ### `0.2.0` on 14-Apr-2013
 * compatibility with grunt 0.4.x
 
@@ -73,3 +79,6 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 ## License
 Copyright (c) 2012 sghill  
 Licensed under the MIT license.
+
+[netrc]: http://man.cx/netrc
+
