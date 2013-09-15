@@ -11,7 +11,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
       username: machine ? machine.login    : null,
       password: machine ? machine.password : null
     };
-  };
+  }
 
   function authentication() {
     var netrcInfo = netrcInformation();
@@ -21,7 +21,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
         password: netrcInfo.password || grunt.config('jenkins.password') || ''
       }
     };
-  };
+  }
 
   this.fetchJobs = function() {
     var deferred = q.defer();
