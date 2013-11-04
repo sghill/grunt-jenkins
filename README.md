@@ -1,8 +1,11 @@
-# grunt-jenkins
-
-Manage Jenkins with Grunt
+grunt-jenkins
+=============
 
 [![Build Status](https://travis-ci.org/sghill/grunt-jenkins.png?branch=master)](https://travis-ci.org/sghill/grunt-jenkins)
+[![Dependencies Status](https://david-dm.org/sghill/grunt-jenkins.png)](https://david-dm.org/sghill/grunt-jenkins)
+[![Code Climate](https://codeclimate.com/github/sghill/grunt-jenkins.png)](https://codeclimate.com/github/sghill/grunt-jenkins)
+
+Manage Jenkins with Grunt
 
 ## `grunt` info
 The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 0.3.x`. Starting with `0.2.x`, `grunt-jenkins` is compatible with `grunt 0.4.x`.
