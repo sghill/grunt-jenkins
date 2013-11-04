@@ -30,7 +30,9 @@
   },
   "devDependencies": {
     "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.4.3"
+    "grunt-contrib-jshint": "~0.4.3",
+    "should": "~2.0.2",
+    "mocha": "~1.14.0"
   },
   "dependencies": {
     "request": "2.27.0",
