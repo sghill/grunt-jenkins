@@ -33,7 +33,8 @@
     "grunt-contrib-jshint": "~0.4.3",
     "should": "~2.0.2",
     "mocha": "~1.14.0",
-    "grunt-mocha-test": "~0.7.0"
+    "grunt-mocha-test": "~0.7.0",
+    "grunt-cli": "~0.1.9"
   },
   "dependencies": {
     "request": "2.27.0",
