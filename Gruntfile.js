@@ -17,9 +17,18 @@ module.exports = function(grunt) {
         eqnull: true,
         node: true,
         es5: true,
-        strict: false
+        strict: false,
+        laxcomma: true
       },
       globals: {}
+    },
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec'
+        },
+        src: ['test/*.js']
+      }
     },
     jenkins: {
       serverAddress: 'http://localhost:8080/'
@@ -27,11 +36,12 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-mocha-test');
 
   // Load local tasks.
   grunt.loadTasks('tasks');
 
   // Default task.
-  grunt.registerTask('default', ['jshint']);
+  grunt.registerTask('default', ['jshint', 'mochaTest']);
 
 };
