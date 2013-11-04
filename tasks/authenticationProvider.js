@@ -7,10 +7,10 @@ function AuthenticationProvider(grunt, netrcConstructor) {
   this.get = function() {
     var netrc = netrcConstructor(netrcLocation)[netrcMachine];
     if(netrc && netrc.login && netrc.password) {
-      return {username: netrc.login, password: netrc.password};
+      return {auth:{username: netrc.login, password: netrc.password}};
     }
     if(username && password) {
-      return {username: username, password: password};
+      return {auth:{username: username, password: password}};
     }
     return {};
   };

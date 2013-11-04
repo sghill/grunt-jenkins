@@ -31,7 +31,7 @@ describe('AuthenticationProvider', function() {
       };
       var provider = new AuthenticationProvider(gruntMock, emptyNetRcMock);
       var options = provider.get();
-      options.should.eql({username: 'un', password: 'pw'});
+      options.should.eql({auth:{username: 'un', password: 'pw'}});
     });
     
     it('should return empty if only username specified', function() {
@@ -89,7 +89,7 @@ describe('AuthenticationProvider', function() {
 
       var provider = new AuthenticationProvider(gruntMock, netRcMock);
       var options = provider.get();
-      options.should.eql({username: 'un-netrc', password: 'pw-netrc'});
+      options.should.eql({auth:{username: 'un-netrc', password: 'pw-netrc'}});
     });
 
     it('should return empty if only username specified', function() {
