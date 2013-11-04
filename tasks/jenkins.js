@@ -2,7 +2,9 @@ var fs = require('fs'),
     _ = require('underscore'),
     q = require('q'),
     JenkinsServer = require('./jenkinsServer'),
-    FileSystem = require('./fileSystem');
+    FileSystem = require('./fileSystem'),
+    netrcFactory = require('netrc'),
+    AuthenticationProvider = require('./authenticationProvider');
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
@@ -17,9 +19,9 @@ module.exports = function(grunt) {
   var pipelineDirectory = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
   var serverAddress = grunt.config('jenkins.serverAddress');
 
+  var defaultOptions = new AuthenticationProvider(grunt, netrcFactory);
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
-  var server = new JenkinsServer(serverAddress, fileSystem, grunt);
-
+  var server = new JenkinsServer(serverAddress, defaultOptions, fileSystem, grunt);
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
   function logError(e) {

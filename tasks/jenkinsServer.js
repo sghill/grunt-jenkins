@@ -1,36 +1,17 @@
-var q = require('q'),
-    _ = require('underscore'),
-    request = require('request'),
-    netrc = require('netrc');
+var q = require('q')
+  , _ = require('underscore')
+  , request = require('request');
 
-function JenkinsServer(serverUrl, fileSystem, grunt) {
-  function netrcInformation() {
-    var netrcPath = grunt.config('jenkins.netrcLocation') || '~/.netrc';
-    var machine = netrc(netrcPath)[grunt.config('jenkins.netrcMachine')];
-    return {
-      username: machine ? machine.login    : null,
-      password: machine ? machine.password : null
-    };
-  }
-
-  function authentication() {
-    var netrcInfo = netrcInformation();
-    var auth = {
-      auth: {
-        username: netrcInfo.username || grunt.config('jenkins.username') || '',
-        password: netrcInfo.password || grunt.config('jenkins.password') || ''
-      }
-    };
-    grunt.verbose.writeln(['Authentication', JSON.stringify(auth)].join(': '));
-    return auth;
-  }
+function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
 
   this.fetchJobs = function() {
-    var deferred = q.defer();
-    var url = [serverUrl, 'api', 'json'].join('/');
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
+          url: [serverUrl, 'api', 'json'].join('/')
+        });
 
-    request(url, authentication(), function(e, r, body) {
-      grunt.verbose.writeln(['GET', url].join(' '));
+    request(options, function(e, r, body) {
+      grunt.verbose.writeln(['GET', options.url].join(' '));
       if(e) {
         grunt.verbose.error(e);
         return deferred.reject(e);
@@ -60,14 +41,14 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   };
 
   this.installPlugins = function(plugins) {
-    var deferred = q.defer(),
-        options = {
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
           url: [serverUrl, 'pluginManager', 'installNecessaryPlugins'].join('/'),
           method: 'POST',
           body: plugins.xml
-        };
+        });
 
-    request(options, authentication(), function(e, r, b) {
+    request(options, function(e, r, b) {
       grunt.verbose.writeln([options.method, options.url].join(' '));
       if(e) {
         grunt.verbose.error(e);
@@ -83,11 +64,13 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   };
 
   this.fetchEnabledPlugins = function() {
-    var url = [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/');
-    var deferred = q.defer();
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
+          url: [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/')
+        });
 
-    request(url, authentication(), function(e, r, body) {
-      grunt.verbose.writeln(['GET', url].join(' '));
+    request(options, function(e, r, body) {
+      grunt.verbose.writeln(['GET', options.url].join(' '));
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
       var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
 
@@ -100,9 +83,13 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   this.fetchJobConfigurations = function(jobs) {
     var deferred = q.defer();
     var promises = _.map(jobs, function(j) {
-      var d = q.defer();
-      request([j.url, 'config.xml'].join(''), authentication(), function(e, r, body) {
-        grunt.verbose.writeln(['GET', j.url].join(' '));
+      var d = q.defer()
+        , options = _.extend(defaultOptions, {
+            url: [j.url, 'config.xml'].join('')
+          });
+
+      request(options, function(e, r, body) {
+        grunt.verbose.writeln(options.url);
         if(e) {
           grunt.verbose.error(e);
           return d.reject(e);
@@ -125,8 +112,8 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   };
 
   function createJob (config) {
-    var deferred = q.defer();
-    var options = {
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
       url: [serverUrl, 'createItem'].join('/'),
       method: 'POST',
       qs: {
@@ -136,9 +123,9 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
         'Content-Type': 'text/xml'
       },
       body: config.fileContents
-    };
+    });
 
-    request(options, authentication(), function(e, r, b) {
+    request(options, function(e, r, b) {
       grunt.verbose.writeln([options.method, options.url].join(' '));
       if(e) {
         grunt.verbose.error(e);
@@ -151,14 +138,14 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   }
 
   function updateJob (config) {
-    var deferred = q.defer(),
-        options = {
-      url: [serverUrl, 'job', config.jobName, 'config.xml'].join('/'),
-      method: 'POST',
-      body: config.fileContents
-    };
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
+          url: [serverUrl, 'job', config.jobName, 'config.xml'].join('/'),
+          method: 'POST',
+          body: config.fileContents
+        });
 
-    request(options, authentication(), function(e, r, b) {
+    request(options, function(e, r, b) {
       grunt.verbose.writeln([options.method, options.url].join(' '));
       if(e) {
         grunt.verbose.error(e);
@@ -171,10 +158,13 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   }
 
   function fetchJobConfigurationStrategy(job) {
-    var deferred = q.defer();
-    var url = [serverUrl, 'job', job, 'config.xml'].join('/');
-    request(url, authentication(), function(e, r, b) {
-      grunt.verbose.writeln(['GET', url].join(' '));
+    var deferred = q.defer()
+      , options = _.extend(defaultOptions, {
+          url: [serverUrl, 'job', job, 'config.xml'].join('/')
+        });
+
+    request(options, function(e, r, b) {
+      grunt.verbose.writeln(['GET', options.url].join(' '));
       var strategy = r.statusCode === 200 ? 'update' : 'create';
       grunt.log.ok(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});
