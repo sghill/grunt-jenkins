@@ -2,6 +2,8 @@
 
 Manage Jenkins with Grunt
 
+[![Build Status](https://travis-ci.org/sghill/grunt-jenkins.png?branch=master)](https://travis-ci.org/sghill/grunt-jenkins)
+
 ## `grunt` info
 The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 0.3.x`. Starting with `0.2.x`, `grunt-jenkins` is compatible with `grunt 0.4.x`.
 
@@ -18,6 +20,7 @@ jenkins: {
 
   // for password-protected jenkins instances only
  ,netrcLocation: '/some/path/netrc'       // optional, preferred, default: '~/.netrc'
+ ,netrcMachine: 'jenkins'                 // optional, required for .netrc
  ,username: 'alf'                         // optional, default: ''
  ,password: 's3cret'                      // optional, default: ''
 }
