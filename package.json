@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "request": "2.27.0",
-    "underscore": "1.4.2",
+    "underscore": "~1.5.2",
     "q": "0.8.9",
     "netrc": "0.1.3"
   },
