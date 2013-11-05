@@ -4,6 +4,33 @@ var q = require('q')
 
 function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
 
+  function verboseLogRequest(options) {
+    var method = options.method || 'GET';
+    grunt.verbose.writeln([method, options.url].join(' '));
+  }
+
+  function verboseLogResponse(r) {
+    grunt.verbose.writeln(['response code', r.statusCode].join(' '));
+  }
+
+  function authenticationFailed(r) {
+    // NOTE: Jenkins returns a webpage that says 'status 401'
+    // but it is actually returning a status code of 403
+    var failed = r.statusCode === 403 || r.statusCode === 401;
+    if(failed) {
+      grunt.log.error('Failed to authenticate.');
+    }
+    return failed;
+  }
+
+  function hasError(e) {
+    if(e) {
+      grunt.log.error(e);
+    }
+    return e;
+  }
+
+  // NOTE: unauthenticated endpoint
   this.fetchJobs = function() {
     var deferred = q.defer()
       , options = _.extend(defaultOptions, {
@@ -11,9 +38,9 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
         });
 
     request(options, function(e, r, body) {
-      grunt.verbose.writeln(['GET', options.url].join(' '));
-      if(e) {
-        grunt.verbose.error(e);
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e)) {
         return deferred.reject(e);
       }
       var jobs = JSON.parse(body).jobs;
@@ -49,9 +76,9 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
         });
 
     request(options, function(e, r, b) {
-      grunt.verbose.writeln([options.method, options.url].join(' '));
-      if(e) {
-        grunt.verbose.error(e);
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       _.each(plugins.plugins, function(p) {
@@ -63,6 +90,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     return deferred.promise;
   };
 
+  // NOTE: unauthenticated endpoint
   this.fetchEnabledPlugins = function() {
     var deferred = q.defer()
       , options = _.extend(defaultOptions, {
@@ -70,7 +98,11 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
         });
 
     request(options, function(e, r, body) {
-      grunt.verbose.writeln(['GET', options.url].join(' '));
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e)) {
+        return deferred.reject(e);
+      }
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
       var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
 
@@ -89,9 +121,9 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
           });
 
       request(options, function(e, r, body) {
-        grunt.verbose.writeln(options.url);
-        if(e) {
-          grunt.verbose.error(e);
+        verboseLogRequest(options);
+        verboseLogResponse(r);
+        if(hasError(e) || authenticationFailed(r)) {
           return d.reject(e);
         }
         j.config = body;
@@ -126,9 +158,9 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     });
 
     request(options, function(e, r, b) {
-      grunt.verbose.writeln([options.method, options.url].join(' '));
-      if(e) {
-        grunt.verbose.error(e);
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       deferred.resolve(r.statusCode === 200);
@@ -146,9 +178,9 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
         });
 
     request(options, function(e, r, b) {
-      grunt.verbose.writeln([options.method, options.url].join(' '));
-      if(e) {
-        grunt.verbose.error(e);
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       deferred.resolve(r.statusCode === 200);
@@ -157,6 +189,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     return deferred.promise;
   }
 
+  // NOTE: unauthenticated endpoint
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer()
       , options = _.extend(defaultOptions, {
@@ -164,7 +197,11 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
         });
 
     request(options, function(e, r, b) {
-      grunt.verbose.writeln(['GET', options.url].join(' '));
+      verboseLogRequest(options);
+      verboseLogResponse(r);
+      if(hasError(e)) {
+        return deferred.reject(e);
+      }
       var strategy = r.statusCode === 200 ? 'update' : 'create';
       grunt.log.ok(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});
