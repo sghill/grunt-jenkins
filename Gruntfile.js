@@ -31,7 +31,7 @@ module.exports = function(grunt) {
       }
     },
     jenkins: {
-      serverAddress: 'http://localhost:8080/'
+      serverAddress: 'http://localhost:8080'
     }
   });
 
