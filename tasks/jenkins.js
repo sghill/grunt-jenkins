@@ -5,6 +5,7 @@ var fs = require('fs'),
     FileSystem = require('./fileSystem'),
     netrcFactory = require('netrc'),
     AuthenticationProvider = require('./authenticationProvider');
+
 /*
  * grunt-jenkins
  * https://github.com/sghill/grunt-jenkins
@@ -64,7 +65,7 @@ module.exports = function(grunt) {
               var allJobsAreEqual = _.reduce(promises, function(memo, p) {
                 var diskContents = p.valueOf().contents;
                 var serverContents = _.find(serverJobsAndConfigurations, function(j) { return j.name === p.valueOf().name; });
-                return memo && (diskContents.toString() === serverContents.config);
+                return memo && diskContents.toString().trim() === serverContents.config.trim();
               }, true);
               if(allJobsAreEqual) {
                 grunt.log.ok('All ' + jobNames.length + ' jobs verified!');
