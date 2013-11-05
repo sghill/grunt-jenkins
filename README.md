@@ -7,39 +7,78 @@ grunt-jenkins
 
 Manage Jenkins with Grunt
 
-## `grunt` info
-The `0.1.x` releases (now on the grunt-0.3.x branch) are compatible with `grunt 0.3.x`. Starting with `0.2.x`, `grunt-jenkins` is compatible with `grunt 0.4.x`.
-
-## Getting Started
-Install this grunt plugin next to your project's [gruntfile][getting_started] with: `npm install grunt-jenkins --save-dev`
-
-You'll need a bit of configuration (in your `grunt.initConfig`):
-
-### Config example
-```javascript
-jenkins: {
-  serverAddress: 'http://localhost:8080'
- ,pipelineDirectory: 'jenkins-pipeline'   // optional, default: 'pipeline'
-
-  // for password-protected jenkins instances only
- ,netrcLocation: '/some/path/netrc'       // optional, preferred, default: '~/.netrc'
- ,netrcMachine: 'jenkins'                 // optional, required for .netrc
- ,username: 'alf'                         // optional, default: ''
- ,password: 's3cret'                      // optional, default: ''
-}
+Getting Started
+---------------
+Install this grunt plugin next to your project's [Gruntfile.js][getting_started] with:
+```shell
+ $ npm install grunt-jenkins --save-dev
 ```
 
-Then add this line to your project's `Gruntfile.js` **after** `grunt.initConfig`:
+You'll need a bit of configuration:
+
+### Gruntfile.js
+
+1. No authentication necessary
 
 ```javascript
-grunt.loadNpmTasks('grunt-jenkins');
+module.exports = function(grunt) {
+  grunt.initConfig({
+    // ...
+    jenkins: {
+      serverAddress: 'http://localhost:8080'
+    , pipelineDirectory: 'jenkins-pipeline'  // optional, default: 'pipeline'
+    }
+  });
+  grunt.loadNpmTasks('grunt-jenkins');
+  // ...
+};
 ```
+
+2. Authenticate via [.netrc][netrc]
+
+```javascript
+module.exports = function(grunt) {
+  grunt.initConfig({
+    // ...
+    jenkins: {
+      serverAddress: 'http://localhost:8080'
+    , netrcMachine: 'ci'
+    , netrcLocation: '/tmp/.netrc'           // optional, default: '~/.netrc'
+    }
+  });
+  grunt.loadNpmTasks('grunt-jenkins');
+  // ...
+};
+```
+
+3. Authenticate via username/password
+
+```javascript
+module.exports = function(grunt) {
+  grunt.initConfig({
+    // ...
+    jenkins: {
+      serverAddress: 'http://localhost:8080'
+    , username: 'alf'                       // if only one of username and password
+    , password: 's3cret'                    // are provided, no authentication attempted
+    }
+  });
+  grunt.loadNpmTasks('grunt-jenkins');
+  // ...
+};
+```
+
+If a netrcMachine and username/password are provided, the netrc machine will be used.
+If using username/password, please pass them in via a command line argument instead
+of hardcoding in the build file.
 
 [grunt]: http://gruntjs.com/
 [getting_started]: https://github.com/gruntjs/grunt/blob/master/docs/getting_started.md
+[netrc]: http://man.cx/netrc
 
-## Documentation
-[`grunt-jenkins`][grunt_jenkins_home] is a tool that makes it easier to keep track of, and work on, your [Jenkins][jenkins_home] installation. Jenkins configurations are often works of art, crafted by many people over a long period of time. Making changes confidently in such an environment without the appropriate tools can be daunting. 
+Usage
+-----
+[`grunt-jenkins`][grunt_jenkins_home] is a tool that makes it easier to keep track of, and work on, your [Jenkins][jenkins_home] installation. Jenkins configurations are often works of art, crafted by many people over a long period of time. Making changes confidently in such an environment without the appropriate tools can be daunting.
 
 ### Back up the configuration
 My preferred way of mitigating CI configuration risk is to check the configuration into source control. Having configuration in source control gives us the confidence to make changes and know that we can go back to a working state. Creating a backup of all of our jobs is fairly simple -- just run the `grunt jenkins-backup-jobs` command. A pipeline directory will be created, a folder for each job within the pipeline directory, and the configuration will be saved to a `config.xml` file within the job directory.
@@ -50,21 +89,45 @@ Having our jobs in source control is great, but it can't make us completely conf
 [grunt_jenkins_home]: https://github.com/sghill/grunt-jenkins
 [jenkins_home]: http://jenkins-ci.org/
 
-## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Lint your code using [grunt][grunt].
+Contributing
+------------
+There are plenty of places to contribute! Hotspots of complexity are highlighted by [codeclimate][codeclimate]. Refactoring
+for testability is especially welcome.
 
-## Release History
+Before submitting a pull request, please make sure the build passes by running:
+```shell
+  $ npm test
+```
 
-### `0.3.0` on 15-Sep-2013
-* compatibility with password-protected jenkins instances via [.netrc][netrc] or username/password. Thanks @panozzaj!
+[codeclimate]: https://codeclimate.com/github/sghill/grunt-jenkins
 
-### `0.2.0` on 14-Apr-2013
+Release History
+---------------
+
+### 0.4.0 on 5-Nov-2013
+* bugfix: authentication broken when no auth used [#6][issue6]
+* badges: now built by travisci against node 0.8 and 0.10
+* badges: dependencies are watched by david
+* badges: codeclimate reports on complexity
+* logging: log error when authentication fails [#7][issue7]
+* logging: logs if and where authentication is coming from
+* logging: much more information on requests and responses with --verbose
+
+[issue6]: https://github.com/sghill/grunt-jenkins/issues/6
+[issue7]: https://github.com/sghill/grunt-jenkins/issues/7
+
+### 0.3.0 on 15-Sep-2013
+* compatibility with password-protected jenkins instances via .netrc or username/password. Thanks [@panozzaj][panozzaj]!
+
+[panozzaj]: https://github.com/panozzaj
+
+### 0.2.0 on 14-Apr-2013
 * compatibility with grunt 0.4.x
 
-### `0.1.1` on 12-Nov-2012
+### 0.1.1 on 12-Nov-2012
 * inject `grunt` instance into `JenkinsServer` and `FileSystem` classes, as globally-installed grunt instances couldn't be `require`d
 
-### `0.1.0` on 11-Nov-2012, from the Alaskan skies!
+### 0.1.0 on 11-Nov-2012, from the Alaskan skies!
 
 #### jobs-related tasks
 * list all jobs on a server with `jenkins-list-jobs`
@@ -83,8 +146,6 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 * for each of the tasks above, a shorter version exists that will run both: `jenkins-list` will run `jenkins-list-jobs` and `jenkins-list-plugins`
 
 ## License
-Copyright (c) 2012 sghill  
+Copyright (c) 2012 sghill
 Licensed under the MIT license.
-
-[netrc]: http://man.cx/netrc
 
