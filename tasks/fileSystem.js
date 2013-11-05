@@ -8,7 +8,7 @@ function FileSystem(pipelineDirectory, grunt) {
 
   this.readFile = function(fileAndJob) {
     var deferred = q.defer();
-    fs.readFile(fileAndJob.fileName, function(e, contents) {
+    fs.readFile(fileAndJob.fileName, {encoding: 'utf8'}, function(e, contents) {
       if(e) { return deferred.reject(e); }
       deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
     });
@@ -29,7 +29,7 @@ function FileSystem(pipelineDirectory, grunt) {
   this.loadPlugins = function() {
     var deferred = q.defer();
     var filename = [pipelineDirectory, 'plugins.json'].join('/');
-    fs.readFile(filename, function(e, contents) {
+    fs.readFile(filename, {encoding: 'utf8'}, function(e, contents) {
       if(e || _.isUndefined(contents)) { return deferred.reject(e); }
       deferred.resolve(JSON.parse(contents));
     });
@@ -41,7 +41,7 @@ function FileSystem(pipelineDirectory, grunt) {
     ensureDirectoriesExist([pipelineDirectory]);
     var filename = [pipelineDirectory, 'plugins.json'].join('/');
     var body = JSON.stringify(plugins, null, 2);
-    fs.writeFile(filename, body, 'utf8', function(e) {
+    fs.writeFile(filename, body, {encoding: 'utf8'}, function(e) {
       if(e) { return deferred.reject(e); }
 
       grunt.log.ok('created file: ' + filename);
@@ -58,7 +58,7 @@ function FileSystem(pipelineDirectory, grunt) {
       ensureDirectoriesExist([pipelineDirectory, j.name]);
       var filename = [pipelineDirectory, j.name, 'config.xml'].join('/');
 
-      fs.writeFile(filename, j.config, 'utf8', function(e) {
+      fs.writeFile(filename, j.config, {encoding: 'utf8'}, function(e) {
         if(e) { return d.reject(e); }
 
         grunt.log.ok('created file: ' + filename);
