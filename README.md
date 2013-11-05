@@ -14,11 +14,9 @@ Install this grunt plugin next to your project's [Gruntfile.js][getting_started]
  $ npm install grunt-jenkins --save-dev
 ```
 
-You'll need a bit of configuration:
-
 ### Gruntfile.js
 
-1. No authentication necessary
+#### Jenkins is not authenticated
 
 ```javascript
 module.exports = function(grunt) {
@@ -34,7 +32,7 @@ module.exports = function(grunt) {
 };
 ```
 
-2. Authenticate via [.netrc][netrc]
+#### Jenkins is authenticated and credentials are in [.netrc][netrc] (preferred)
 
 ```javascript
 module.exports = function(grunt) {
@@ -51,7 +49,7 @@ module.exports = function(grunt) {
 };
 ```
 
-3. Authenticate via username/password
+#### Jenkins is authenticated and credentials are provided by username/password
 
 ```javascript
 module.exports = function(grunt) {
