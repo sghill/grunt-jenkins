@@ -20,7 +20,7 @@ module.exports = function(grunt) {
   var pipelineDirectory = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
   var serverAddress = grunt.config('jenkins.serverAddress');
 
-  var defaultOptions = new AuthenticationProvider(grunt, netrcFactory);
+  var defaultOptions = new AuthenticationProvider(grunt, netrcFactory).get();
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
   var server = new JenkinsServer(serverAddress, defaultOptions, fileSystem, grunt);
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
