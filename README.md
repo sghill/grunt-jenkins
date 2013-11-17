@@ -87,6 +87,14 @@ Having our jobs in source control is great, but it can't make us completely conf
 [grunt_jenkins_home]: https://github.com/sghill/grunt-jenkins
 [jenkins_home]: http://jenkins-ci.org/
 
+In The News
+-----------
+* [How Do I Backup Jenkins Jobs?][how_to] from 13-Nov-2012
+* [grunt-jenkins One Year On][one_year] from 17-Nov-2013
+
+[how_to]: http://dev.sghill.net/2012/11/how-do-i-backup-jenkins-jobs.html
+[one_year]: http://dev.sghill.net/2013/11/grunt-jenkins-one-year-on.html
+
 Contributing
 ------------
 There are plenty of places to contribute! Hotspots of complexity are highlighted by [codeclimate][codeclimate]. Refactoring
