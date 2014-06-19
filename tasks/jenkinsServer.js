@@ -45,7 +45,11 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
       }
       var jobs = JSON.parse(body).jobs;
       grunt.log.writeln(['Found', jobs.length, 'jobs.'].join(' '));
-      deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
+      deferred.resolve(_.map(jobs, function(j) {
+        var path = j.url.replace (/^https?\:\/{2}[^\/]+\/(.*)/, '$1');
+        var url = [serverUrl, path].join('/');
+        return { name: j.name, url: url };
+      }));
     });
 
     return deferred.promise;
