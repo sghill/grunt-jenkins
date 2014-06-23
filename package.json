@@ -37,8 +37,8 @@
     "grunt-cli": "~0.1.9"
   },
   "dependencies": {
-    "request": "2.27.0",
-    "underscore": "~1.5.2",
+    "request": "~2.36.0",
+    "underscore": "~1.6.0",
     "q": "0.8.9",
     "netrc": "0.1.3"
   },
