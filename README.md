@@ -110,7 +110,7 @@ Before submitting a pull request, please make sure the build passes by running:
 Release History
 ---------------
 
-### 0.5.0 on 23-Jun-2013
+### 0.5.0 on 23-Jun-2014
 * feature: support Jenkins running on NAT network in private cloud [#9][issue9]. Thanks [@StefanScherer][StefanScherer]!
 
 [issue9]: https://github.com/sghill/grunt-jenkins/pull/9
