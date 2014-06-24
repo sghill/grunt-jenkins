@@ -110,6 +110,12 @@ Before submitting a pull request, please make sure the build passes by running:
 Release History
 ---------------
 
+### 0.5.0 on 23-Jun-2013
+* feature: support Jenkins running on NAT network in private cloud [#9][issue9]. Thanks [@StefanScherer][StefanScherer]!
+
+[issue9]: https://github.com/sghill/grunt-jenkins/pull/9
+[StefanScherer]: https://github.com/StefanScherer
+
 ### 0.4.0 on 5-Nov-2013
 * bugfix: authentication broken when no auth used [#6][issue6]
 * badges: now built by travisci against node 0.8 and 0.10
