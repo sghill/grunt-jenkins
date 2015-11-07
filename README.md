@@ -68,7 +68,8 @@ module.exports = function(grunt) {
 
 If a netrcMachine and username/password are provided, the netrc machine will be used.
 If using username/password, please pass them in via a command line argument instead
-of hardcoding in the build file.
+of hardcoding in the build file.  
+If you are using Github OAuth for authentication, use API token instead of password which you can find at serverAddress/user/your-user-name/configure.
 
 [grunt]: http://gruntjs.com/
 [getting_started]: https://github.com/gruntjs/grunt/blob/master/docs/getting_started.md
