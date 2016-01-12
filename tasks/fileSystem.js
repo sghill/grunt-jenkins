@@ -19,17 +19,14 @@ function FileSystem(pipelineDirectory, grunt) {
     var deferred = q.defer();
     fs.readdir(pipelineDirectory, function(e, contents) {
       if(e) { return deferred.reject(e); }
-      // assumption: we don't have periods in our job names
       // by DT:  this was causing jobs with version numbers in them to not be loaded into the destination jenkins.
-      //      var directories = _.reject(contents, withDot);
-      //deferred.resolve(directories);
       //replacing with this loop:
       var directories =[];
 
       for(var file in contents){
-	  if(fs.lstatSync([pipelineDirectory,contents[file]].join('/')).isDirectory()){
-	      directories.push(contents[file]);
-	  }
+        if(fs.lstatSync([pipelineDirectory,contents[file]].join('/')).isDirectory()){
+          directories.push(contents[file]);
+        }
       }
       deferred.resolve(directories);
     });
