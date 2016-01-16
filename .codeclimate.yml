@@ -1,0 +1,9 @@
+engines:
+  eslint:
+    enabled: true
+ratings:
+  paths:
+  - tasks/**
+  - "**.js"
+exclude_paths:
+- test/**/*
