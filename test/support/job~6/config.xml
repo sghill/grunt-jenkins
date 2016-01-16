@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<hudson.model.ExternalJob plugin="external-monitor-job@1.4">
+  <actions/>
+  <description>this is a description for an external job</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+</hudson.model.ExternalJob>

@@ -1,0 +1,78 @@
+[
+  {
+    "id": "ant",
+    "version": "1.2"
+  },
+  {
+    "id": "antisamy-markup-formatter",
+    "version": "1.1"
+  },
+  {
+    "id": "credentials",
+    "version": "1.18"
+  },
+  {
+    "id": "cvs",
+    "version": "2.11"
+  },
+  {
+    "id": "external-monitor-job",
+    "version": "1.4"
+  },
+  {
+    "id": "javadoc",
+    "version": "1.1"
+  },
+  {
+    "id": "junit",
+    "version": "1.2-beta-4"
+  },
+  {
+    "id": "ldap",
+    "version": "1.11"
+  },
+  {
+    "id": "mailer",
+    "version": "1.11"
+  },
+  {
+    "id": "matrix-auth",
+    "version": "1.1"
+  },
+  {
+    "id": "matrix-project",
+    "version": "1.4.1"
+  },
+  {
+    "id": "maven-plugin",
+    "version": "2.7.1"
+  },
+  {
+    "id": "pam-auth",
+    "version": "1.1"
+  },
+  {
+    "id": "script-security",
+    "version": "1.13"
+  },
+  {
+    "id": "ssh-credentials",
+    "version": "1.10"
+  },
+  {
+    "id": "ssh-slaves",
+    "version": "1.9"
+  },
+  {
+    "id": "subversion",
+    "version": "1.54"
+  },
+  {
+    "id": "translation",
+    "version": "1.10"
+  },
+  {
+    "id": "windows-slaves",
+    "version": "1.0"
+  }
+]
