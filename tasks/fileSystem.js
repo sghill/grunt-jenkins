@@ -1,6 +1,6 @@
 var q = require('q'),
-    _ = require('underscore'),
-    fs = require('fs');
+  _ = require('underscore'),
+  fs = require('fs');
 
 function FileSystem(pipelineDirectory, grunt) {
 
@@ -8,9 +8,16 @@ function FileSystem(pipelineDirectory, grunt) {
 
   this.readFile = function(fileAndJob) {
     var deferred = q.defer();
-    fs.readFile(fileAndJob.fileName, {encoding: 'utf8'}, function(e, contents) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve({fileContents: contents, jobName: fileAndJob.jobName });
+    fs.readFile(fileAndJob.fileName, {
+      encoding: 'utf8'
+    }, function(e, contents) {
+      if (e) {
+        return deferred.reject(e);
+      }
+      deferred.resolve({
+        fileContents: contents,
+        jobName: fileAndJob.jobName
+      });
     });
     return deferred.promise;
   };
@@ -18,13 +25,15 @@ function FileSystem(pipelineDirectory, grunt) {
   this.loadJobs = function() {
     var deferred = q.defer();
     fs.readdir(pipelineDirectory, function(e, contents) {
-      if(e) { return deferred.reject(e); }
+      if (e) {
+        return deferred.reject(e);
+      }
       // by DT:  this was causing jobs with version numbers in them to not be loaded into the destination jenkins.
       //replacing with this loop:
-      var directories =[];
+      var directories = [];
 
-      for(var file in contents){
-        if(fs.lstatSync([pipelineDirectory,contents[file]].join('/')).isDirectory()){
+      for (var file in contents) {
+        if (fs.lstatSync([pipelineDirectory, contents[file]].join('/')).isDirectory()) {
           directories.push(contents[file]);
         }
       }
@@ -36,8 +45,12 @@ function FileSystem(pipelineDirectory, grunt) {
   this.loadPlugins = function() {
     var deferred = q.defer();
     var filename = [pipelineDirectory, 'plugins.json'].join('/');
-    fs.readFile(filename, {encoding: 'utf8'}, function(e, contents) {
-      if(e || _.isUndefined(contents)) { return deferred.reject(e); }
+    fs.readFile(filename, {
+      encoding: 'utf8'
+    }, function(e, contents) {
+      if (e || _.isUndefined(contents)) {
+        return deferred.reject(e);
+      }
       deferred.resolve(JSON.parse(contents));
     });
     return deferred.promise;
@@ -48,8 +61,12 @@ function FileSystem(pipelineDirectory, grunt) {
     ensureDirectoriesExist([pipelineDirectory]);
     var filename = [pipelineDirectory, 'plugins.json'].join('/');
     var body = JSON.stringify(plugins, null, 2);
-    fs.writeFile(filename, body, {encoding: 'utf8'}, function(e) {
-      if(e) { return deferred.reject(e); }
+    fs.writeFile(filename, body, {
+      encoding: 'utf8'
+    }, function(e) {
+      if (e) {
+        return deferred.reject(e);
+      }
 
       grunt.log.ok('created file: ' + filename);
       deferred.resolve(true);
@@ -65,8 +82,12 @@ function FileSystem(pipelineDirectory, grunt) {
       ensureDirectoriesExist([pipelineDirectory, j.name]);
       var filename = [pipelineDirectory, j.name, 'config.xml'].join('/');
 
-      fs.writeFile(filename, j.config, {encoding: 'utf8'}, function(e) {
-        if(e) { return d.reject(e); }
+      fs.writeFile(filename, j.config, {
+        encoding: 'utf8'
+      }, function(e) {
+        if (e) {
+          return d.reject(e);
+        }
 
         grunt.log.ok('created file: ' + filename);
         d.resolve(filename);
@@ -76,7 +97,9 @@ function FileSystem(pipelineDirectory, grunt) {
 
     q.allResolved(fileWritingPromises).
       then(function(promises) {
-        if(_.all(promises, function(p) { return p.isFulfilled(); })) {
+        if (_.all(promises, function(p) {
+            return p.isFulfilled();
+          })) {
           deferred.resolve(true);
         } else {
           deferred.reject();
@@ -93,7 +116,7 @@ function FileSystem(pipelineDirectory, grunt) {
   function ensureDirectoriesExist(directories) {
     _.each(directories, function(d, index) {
       var path = _.take(directories, (index + 1)).join('/');
-      if(!fs.existsSync(path)) {
+      if (!fs.existsSync(path)) {
         fs.mkdirSync(path);
       }
     });
