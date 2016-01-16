@@ -1,6 +1,7 @@
 var q = require('q'),
   _ = require('underscore'),
-  fs = require('fs');
+  fs = require('fs'),
+  path = require('path');
 
 function FileSystem(pipelineDirectory, grunt) {
 
@@ -28,15 +29,12 @@ function FileSystem(pipelineDirectory, grunt) {
       if (e) {
         return deferred.reject(e);
       }
-      // by DT:  this was causing jobs with version numbers in them to not be loaded into the destination jenkins.
-      //replacing with this loop:
-      var directories = [];
-
-      for (var file in contents) {
-        if (fs.lstatSync([pipelineDirectory, contents[file]].join('/')).isDirectory()) {
-          directories.push(contents[file]);
-        }
-      }
+      var paths = _.map(contents, function(x) {
+        return path.join(pipelineDirectory, x);
+      });
+      var directories = _.filter(paths, function(x) {
+        return fs.lstatSync(x).isDirectory();
+      });
       deferred.resolve(directories);
     });
     return deferred.promise;
@@ -108,10 +106,6 @@ function FileSystem(pipelineDirectory, grunt) {
 
     return deferred.promise;
   };
-
-  function withDot(filename) {
-    return (/\./).test(filename);
-  }
 
   function ensureDirectoriesExist(directories) {
     _.each(directories, function(d, index) {
