@@ -1,5 +1,6 @@
 .DS_Store
 .c9revisions/
 
+coverage/
 node_modules/
 pipeline/

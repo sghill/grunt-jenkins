@@ -29,6 +29,14 @@ module.exports = function(grunt) {
         src: ['test/*.js']
       }
     },
+    mocha_istanbul: {
+      coverage: {
+        src: 'test',
+        options: {
+          mask: '*Test.js'
+        }
+      }
+    },
     jenkins: {
       serverAddress: 'http://localhost:8080'
     }
@@ -36,6 +44,7 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-mocha-istanbul');
 
   // Load local tasks.
   grunt.loadTasks('tasks');
