@@ -94,7 +94,7 @@ and know that we can go back to a working state. To create a backup of all jobs
 run `grunt jenkins-backup-jobs`. Behind the scenes, grunt-jenkins will:
 
 1. Create _pipelineDirectory_ if necessary
-2. For each job: Create _pipelineDirectory_/`jobName`/config.xml
+2. For each job: Create _pipelineDirectory_/_jobName_/config.xml
 
 ### Verify the backup, constantly
 Having our jobs in source control is great, but it can't make us completely
@@ -121,7 +121,7 @@ In The News
 Release History
 ---------------
 
-### 0.6.0 on 16-Jan-2016
+### 0.6.0 on 17-Jan-2016
 * feature: handle periods in job names [#11][issue11]. Thanks
   [@dtJuiceMobile][dtJuiceMobile]!
 * badges: npm version badge added
