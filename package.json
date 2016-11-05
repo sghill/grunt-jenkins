@@ -5,7 +5,7 @@
   "homepage": "http://documentup.com/sghill/grunt-jenkins",
   "author": {
     "name": "sghill",
-    "email": "steve@sghill.net"
+    "email": "sghill.dev@gmail.com"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   "main": "grunt.js",
   "bin": "bin/grunt-jenkins",
   "engines": {
-    "node": "*"
+    "node": ">= 4.0.0"
   },
   "scripts": {
     "test": "grunt jshint mocha_istanbul"
