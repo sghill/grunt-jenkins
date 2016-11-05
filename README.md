@@ -2,9 +2,10 @@ grunt-jenkins
 =============
 
 [![npm version](https://badge.fury.io/js/grunt-jenkins.svg)](https://badge.fury.io/js/grunt-jenkins)
-[![Build Status](https://travis-ci.org/sghill/grunt-jenkins.png?branch=master)](https://travis-ci.org/sghill/grunt-jenkins)
-[![Code Climate](https://codeclimate.com/github/sghill/grunt-jenkins.png)](https://codeclimate.com/github/sghill/grunt-jenkins)
-[![Dependencies Status](https://david-dm.org/sghill/grunt-jenkins.png)](https://david-dm.org/sghill/grunt-jenkins)
+[![Build Status](https://travis-ci.org/sghill/grunt-jenkins.svg?branch=master)](https://travis-ci.org/sghill/grunt-jenkins)
+[![Code Climate](https://codeclimate.com/github/sghill/grunt-jenkins.svg)](https://codeclimate.com/github/sghill/grunt-jenkins)
+[![dependencies Status](https://david-dm.org/sghill/grunt-jenkins/status.svg)](https://david-dm.org/sghill/grunt-jenkins)
+[![devDependencies Status](https://david-dm.org/sghill/grunt-jenkins/dev-status.svg)](https://david-dm.org/sghill/grunt-jenkins?type=dev)
 
 Manage Jenkins with Grunt
 
