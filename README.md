@@ -122,6 +122,11 @@ In The News
 Release History
 ---------------
 
+### 0.7.0 on 5-Nov-2016
+* upgrade dependencies
+* test against node 4, 5, 6, 7
+* require >= node 4.0.0
+
 ### 0.6.0 on 17-Jan-2016
 * feature: handle periods in job names [#11][issue11]. Thanks
   [@dtJuiceMobile][dtJuiceMobile]!
