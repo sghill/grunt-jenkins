@@ -146,13 +146,13 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
       return d.promise;
     });
 
-    q.allResolved(promises).
+    q.allSettled(promises).
       then(function(promises) {
         if (_.all(promises, function(p) {
-            return p.isFulfilled();
+            return p.state === 'fulfilled';
           })) {
           deferred.resolve(_.map(promises, function(p) {
-            return p.valueOf();
+            return p.value;
           }));
         } else {
           deferred.reject();

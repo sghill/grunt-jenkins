@@ -64,15 +64,15 @@ module.exports = function(grunt) {
           return d.promise;
         });
 
-        q.allResolved(filePromises)
+        q.allSettled(filePromises)
           .then(function(promises) {
             if (_.all(promises, function(p) {
-                return p.isFulfilled();
+                return p.state  === 'fulfilled';
               })) {
               var allJobsAreEqual = _.reduce(promises, function(memo, p) {
-                var diskContents = p.valueOf().contents;
+                var diskContents = p.value.contents;
                 var serverContents = _.find(serverJobsAndConfigurations, function(j) {
-                  return j.name === p.valueOf().name;
+                  return j.name === p.value.name;
                 });
                 return memo && diskContents.toString().trim() === serverContents.config.trim();
               }, true);

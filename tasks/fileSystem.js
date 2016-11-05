@@ -29,11 +29,9 @@ function FileSystem(pipelineDirectory, grunt) {
       if (e) {
         return deferred.reject(e);
       }
-      var paths = _.map(contents, function(x) {
-        return path.join(pipelineDirectory, x);
-      });
-      var directories = _.filter(paths, function(x) {
-        return fs.lstatSync(x).isDirectory();
+      var directories = _.filter(contents, function(x) {
+        var filePath = path.join(pipelineDirectory, x);
+        return fs.lstatSync(filePath).isDirectory();
       });
       deferred.resolve(directories);
     });
@@ -93,10 +91,10 @@ function FileSystem(pipelineDirectory, grunt) {
       return d.promise;
     });
 
-    q.allResolved(fileWritingPromises).
-      then(function(promises) {
-        if (_.all(promises, function(p) {
-            return p.isFulfilled();
+    q.allSettled(fileWritingPromises).
+      then(function(results) {
+        if (_.all(results, function(r) {
+            return r.state === 'fulfilled';
           })) {
           deferred.resolve(true);
         } else {
