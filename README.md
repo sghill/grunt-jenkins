@@ -122,6 +122,9 @@ In The News
 Release History
 ---------------
 
+### 0.7.1 on 7-Nov-2016
+* Whitelist files for package to exclude unnecessary files from installation
+
 ### 0.7.0 on 5-Nov-2016
 * upgrade dependencies
 * test against node 4, 5, 6, 7
