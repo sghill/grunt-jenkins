@@ -44,5 +44,11 @@
     "gruntplugin",
     "jenkins",
     "ci"
+  ],
+  "files": [
+    "LICENSE-MIT",
+    "README.md",
+    "bin/",
+    "tasks/"
   ]
 }
