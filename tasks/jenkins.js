@@ -23,7 +23,6 @@ module.exports = function(grunt) {
   var defaultOptions = new AuthenticationProvider(grunt, netrcFactory).get();
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
   var server = new JenkinsServer(serverAddress, defaultOptions, fileSystem, grunt);
-  var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
   function logError(e) {
     if (e) {
