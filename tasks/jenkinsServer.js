@@ -23,11 +23,15 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     return failed;
   }
 
-  function hasError(e) {
+  function hasError(e, r) {
+    var isNotSuccessful = r.statusCode !== 200;
     if (e) {
       grunt.log.error(e);
     }
-    return e;
+    if (isNotSuccessful) {
+      grunt.log.error([r.statusCode, 'from', r.request.method, r.request.uri.href].join(' '));
+    }
+    return !_.isNull(e) || isNotSuccessful;
   }
 
   // NOTE: unauthenticated endpoint
@@ -40,7 +44,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, body) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e)) {
+      if (hasError(e, r)) {
         return deferred.reject(e);
       }
       var jobs = JSON.parse(body).jobs;
@@ -85,7 +89,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, b) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e) || authenticationFailed(r)) {
+      if (hasError(e, r) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       _.each(plugins.plugins, function(p) {
@@ -107,7 +111,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, body) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e)) {
+      if (hasError(e, r)) {
         return deferred.reject(e);
       }
       var result = _.filter(JSON.parse(body).plugins, function(p) {
@@ -137,7 +141,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
       request(options, function(e, r, body) {
         verboseLogRequest(options);
         verboseLogResponse(r);
-        if (hasError(e) || authenticationFailed(r)) {
+        if (hasError(e, r) || authenticationFailed(r)) {
           return d.reject(e);
         }
         j.config = body;
@@ -178,7 +182,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, b) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e) || authenticationFailed(r)) {
+      if (hasError(e, r) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       deferred.resolve(r.statusCode === 200);
@@ -198,7 +202,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, b) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e) || authenticationFailed(r)) {
+      if (hasError(e, r) || authenticationFailed(r)) {
         return deferred.reject(e);
       }
       deferred.resolve(r.statusCode === 200);
@@ -217,7 +221,7 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
     request(options, function(e, r, b) {
       verboseLogRequest(options);
       verboseLogResponse(r);
-      if (hasError(e)) {
+      if (hasError(e, r)) {
         return deferred.reject(e);
       }
       var strategy = r.statusCode === 200 ? 'update' : 'create';

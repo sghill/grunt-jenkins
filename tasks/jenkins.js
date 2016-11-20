@@ -26,7 +26,9 @@ module.exports = function(grunt) {
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
   function logError(e) {
-    grunt.log.error(e);
+    if (e) {
+      grunt.log.error(e);
+    }
   }
 
   function transformToJenkinsXml(plugins) {
