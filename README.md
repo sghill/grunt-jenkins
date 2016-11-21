@@ -150,7 +150,7 @@ Release History
   server address instead of the job url provided by the Jenkins API,
   this is now opt-in by setting `jobUrlResolutionStrategy` to
   `'REWRITE_WITH_SERVER_ADDRESS'`
-* Upgrade request to 2.78.0
+* Upgrade request dependency to 2.79.0
 
 [issue13]: https://github.com/sghill/grunt-jenkins/issues/13
 
