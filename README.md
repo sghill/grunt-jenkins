@@ -70,6 +70,27 @@ module.exports = function(grunt) {
 };
 ```
 
+#### Jenkins is running in a private cloud with a different than provided
+
+If you needed the feature provided by [PR #9][issue9], allowing job urls to be
+overwritten by the given server url, this feature is opt-in as of v0.8.0. By
+default we will use the `PROVIDED` url from the Jenkins api, which supports
+different context roots.
+
+```javascript
+module.exports = function(grunt) {
+  grunt.initConfig({
+    // ...
+    jenkins: {
+      serverAddress: 'http://localhost:8080',
+      jobUrlResolutionStrategy: 'REWRITE_WITH_SERVER_ADDRESS'
+    }
+  });
+  grunt.loadNpmTasks('grunt-jenkins');
+  // ...
+};
+```
+
 If a netrcMachine and username/password are provided, the netrc machine will be
 used. If using username/password, please pass them in via a command line
 argument instead of hardcoding in the build file.
@@ -121,6 +142,17 @@ In The News
 
 Release History
 ---------------
+
+### 0.8.0 on 20-Nov-2016
+* Support alternate context roots with default `jobUrlResolutionStrategy`
+  [#13][issue13]
+* If you need the support provided by [#9][issue9] for using the given
+  server address instead of the job url provided by the Jenkins API,
+  this is now opt-in by setting `jobUrlResolutionStrategy` to
+  `'REWRITE_WITH_SERVER_ADDRESS'`
+* Upgrade request to 2.78.0
+
+[issue13]: https://github.com/sghill/grunt-jenkins/issues/13
 
 ### 0.7.1 on 7-Nov-2016
 * Whitelist files for package to exclude unnecessary files from installation

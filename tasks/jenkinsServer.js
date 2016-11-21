@@ -2,7 +2,7 @@ var q = require('q'),
   _ = require('underscore'),
   request = require('request');
 
-function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
+function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt, jobUrlResolutionStrategy) {
 
   function verboseLogRequest(options) {
     var method = options.method || 'GET';
@@ -50,8 +50,15 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt) {
       var jobs = JSON.parse(body).jobs;
       grunt.log.writeln(['Found', jobs.length, 'jobs.'].join(' '));
       deferred.resolve(_.map(jobs, function(j) {
-        var path = j.url.replace(/^https?\:\/{2}[^\/]+\/(.*)/, '$1');
-        var url = [serverUrl, path].join('/');
+        var url;
+        if (jobUrlResolutionStrategy === 'PROVIDED') {
+          url = j.url;
+        } else if (jobUrlResolutionStrategy === 'REWRITE_WITH_SERVER_ADDRESS') {
+          var path = j.url.replace(/^https?\:\/{2}[^\/]+\/(.*)/, '$1');
+          url = [serverUrl, path].join('/');
+        } else {
+          grunt.log.error(jobUrlResolutionStrategy + ' is not a valid value: [PROVIDED, REWRITE_WITH_SERVER_ADDRESS]');
+        }
         return {
           name: j.name,
           url: url

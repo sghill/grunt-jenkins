@@ -19,10 +19,11 @@ module.exports = function(grunt) {
   grunt.config.requires('jenkins.serverAddress');
   var pipelineDirectory = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
   var serverAddress = grunt.config('jenkins.serverAddress');
+  var jobUrlResolutionStrategy = grunt.config('jenkins.jobUrlResolutionStrategy') || 'PROVIDED';
 
   var defaultOptions = new AuthenticationProvider(grunt, netrcFactory).get();
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
-  var server = new JenkinsServer(serverAddress, defaultOptions, fileSystem, grunt);
+  var server = new JenkinsServer(serverAddress, defaultOptions, fileSystem, grunt, jobUrlResolutionStrategy);
 
   function logError(e) {
     if (e) {
