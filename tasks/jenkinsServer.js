@@ -34,6 +34,11 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt, jobUrlResol
     return !_.isNull(e) || isNotSuccessful;
   }
 
+  function isFunction(fn){
+    var getType = {};
+     return fn && getType.toString.call(fn) === '[object Function]';
+  }
+
   // NOTE: unauthenticated endpoint
   this.fetchJobs = function() {
     var deferred = q.defer(),
@@ -56,6 +61,8 @@ function JenkinsServer(serverUrl, defaultOptions, fileSystem, grunt, jobUrlResol
         } else if (jobUrlResolutionStrategy === 'REWRITE_WITH_SERVER_ADDRESS') {
           var path = j.url.replace(/^https?\:\/{2}[^\/]+\/(.*)/, '$1');
           url = [serverUrl, path].join('/');
+        } else if (isFunction(jobUrlResolutionStrategy)){
+          url = jobUrlResolutionStrategy(j,serverUrl);
         } else {
           grunt.log.error(jobUrlResolutionStrategy + ' is not a valid value: [PROVIDED, REWRITE_WITH_SERVER_ADDRESS]');
         }
